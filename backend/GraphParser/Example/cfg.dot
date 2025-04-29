@@ -1,6 +1,3 @@
-from GraphParser import GraphParser
-
-input_str = r"""
 digraph cluster0cfg {
 	graph [bb="0,0,610,342.25",
 		compound=True,
@@ -185,9 +182,3 @@ digraph cluster0cfg {
 		lp="207.25,77.875",
 		pos="e,187,61.608 187,102.05 187,93.404 187,82.745 187,72.945"];
 }
-
-
-"""
-
-parser = GraphParser(input_str)
-print(parser.graphViz())

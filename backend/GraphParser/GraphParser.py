@@ -1,9 +1,9 @@
-import re
 import regex
 from Graph import Graph
 from Node import Node
 from NodeLabel import NodeLabel
 from Edge import Edge
+from EdgeLabel import EdgeLabel
 
 class GraphParser:
     def __init__(self, input_str, parent=None):
@@ -18,7 +18,7 @@ class GraphParser:
         self.from_str(input_str)
 
     def from_str(self, input_str):
-        header_match = re.match(r'(subgraph|digraph)?\s*(\w+)?\s*{', input_str.strip())
+        header_match = regex.match(r'(subgraph|digraph)?\s*(\w+)?\s*{', input_str.strip())
         if header_match:
             self.name = header_match.group(2) or "Unnamed"
 
@@ -28,10 +28,9 @@ class GraphParser:
             return
 
         content = input_str[start:end].strip()
-
         blocks = regex.findall(
-            r'(?:\d+\s*\[.*?\])|'
-            r'(?:\d+\s*->\s*\d+\s*\[.*?\])|'
+            r'(?:[A-Za-z0-9]+\s*\[.*?\])|'
+            r'(?:[A-Za-z0-9]+\s*->\s*[A-Za-z0-9]+\s*\[.*?\])|'
             r'(?:graph\s*\[.*?\])|'
             r'(?:node\s*\[.*?\])|'
             r'(?:edge\s*\[.*?\])|'
@@ -40,27 +39,29 @@ class GraphParser:
             content,
             regex.DOTALL
         )
+        
 
 
         for block in blocks:
-            # print(f"index {blocks.index(block)}: {block}")
+
             block = block.strip()
             if block.startswith("graph"):
-                self.graph = Graph.from_str(block)
+                self.graph = Graph(block)
             elif block.startswith("node"):
-                self.nodeLabel = NodeLabel.from_str(block)
+                self.nodeLabel = NodeLabel(block)
             elif block.startswith("edge"):
-                self.edgeLabel = NodeLabel.from_str(block)
+                self.edgeLabel = EdgeLabel(block)
             elif block.startswith("subgraph") or block.startswith("digraph"):
-                # print("[!] Subgraph ditemukan:", block)
-                sub_parser = GraphParser(block, parent=self)  # Pass parent reference
+                sub_parser = GraphParser(block, parent=self)  
+                if(sub_parser.name == "cluster_KEY") :
+                    continue
                 self.subGraph.append(sub_parser)
             elif "->" in block:
                 try:
                     self.edge.append(Edge(block))
                 except Exception as e:
                     print(f"Failed to parse edge: {e}")
-            elif re.match(r'^\d+\s+\[.*\]$', block, re.DOTALL):
+            elif regex.match(r'^[A-Za-z0-9]+\s*\[.*\]$', block, regex.DOTALL):
                 try:
                     self.node.append(Node(block))
                 except Exception as e:
@@ -85,3 +86,45 @@ class GraphParser:
         for sg in self.subGraph:
             print(f"{indent_str}  - Subgraph: {sg.name}")
             sg.print(indent=indent+1)  
+
+    def graphViz(self, indent=0):
+        indent_str = "  " * indent
+        lines = []
+        
+        # Graph header
+        if self.name:
+            # Check if any edge uses '->' to determine if it's a digraph
+            is_digraph = any(hasattr(e, 'direction') and e.direction == "->" for e in self.edge)
+            graph_type = "digraph" if is_digraph else "subgraph"
+            lines.append(f"{indent_str}{graph_type} {self.name} {{")
+        else:
+            lines.append(f"{indent_str}digraph {{")
+        
+        # Global graph attributes
+        if self.graph:
+            lines.append(f"{indent_str} {self.graph.graphViz()}")
+        
+        # Default node attributes
+        if self.nodeLabel:
+            lines.append(f"{indent_str}  {self.nodeLabel.graphViz()}")
+        
+        # Default edge attributes
+        if self.edgeLabel:
+            lines.append(f"{indent_str}  {self.edgeLabel.graphViz()}")
+        
+        # Subgraphs
+        for subgraph in self.subGraph:
+            lines.append(f"{subgraph.graphViz(indent + 1)}")
+
+                    # Nodes
+        for node in self.node:
+            lines.append(f"{indent_str}  {node.graphViz()}")
+        
+        # Edges
+        for edge in self.edge:
+            lines.append(f"{indent_str}  {edge.graphViz()}")
+
+        # Closing brace
+        lines.append(f"{indent_str}}}")
+        
+        return "\n".join(lines)
