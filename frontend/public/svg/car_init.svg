@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="244pt" height="126pt" viewBox="0.00 0.00 244.00 125.60">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 121.6)">
+<title>cluster0dot</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-121.6 240,-121.6 240,4 -4,4"/>
+<text text-anchor="middle" x="118" y="-8.2" font-family="DejaVu Sans Mono" font-size="14.00">dot</text>
+<g id="clust1" class="cluster">
+<title>cluster0__init__</title>
+<polygon fill="none" stroke="black" points="8,-32.8 8,-109.6 228,-109.6 228,-32.8 8,-32.8"/>
+<text text-anchor="middle" x="118" y="-93" font-family="DejaVu Sans Mono" font-size="14.00">__init__</text>
+</g>
+<!-- 5 -->
+<g id="node1" class="node">
+<title>5</title>
+<polygon fill="#fffb81" stroke="black" points="219.75,-76.8 16.25,-76.8 16.25,-40.8 219.75,-40.8 219.75,-76.8"/>
+<text text-anchor="start" x="24.25" y="-54.6" font-family="DejaVu Sans Mono" font-size="14.00">self.horsepower = horsepower</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="374pt" height="126pt" viewBox="0.00 0.00 374.00 125.60">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 121.6)">
+<title>cluster0dot</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-121.6 370,-121.6 370,4 -4,4"/>
+<text text-anchor="middle" x="183" y="-8.2" font-family="DejaVu Sans Mono" font-size="14.00">dot</text>
+<g id="clust1" class="cluster">
+<title>cluster0stop</title>
+<polygon fill="none" stroke="black" points="8,-32.8 8,-109.6 358,-109.6 358,-32.8 8,-32.8"/>
+<text text-anchor="middle" x="183" y="-93" font-family="DejaVu Sans Mono" font-size="14.00">stop</text>
+</g>
+<!-- 12 -->
+<g id="node1" class="node">
+<title>12</title>
+<polygon fill="#98fb98" stroke="black" points="350.41,-76.8 84.1,-76.8 15.59,-40.8 281.9,-40.8 350.41,-76.8"/>
+<text text-anchor="start" x="73.95" y="-54.6" font-family="DejaVu Sans Mono" font-size="14.00">return 'Engine stopped'</text>
+</g>
+</g>
+</svg>

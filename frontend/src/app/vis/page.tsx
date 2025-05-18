@@ -4,28 +4,143 @@ import React, { useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { Timestamp } from '../utils/Timestamp';
 
+declare global {
+  interface Window {
+    $: any;
+  }
+}
+
 export default function VisualizerPage() {
   const [sourceCode, setSourceCode] = useState("print('Hello, world!')");
-  const [svgOutput, setSvgOutput] = useState("<svg><text x='10' y='20'>Visualisasi akan tampil di sini</text></svg>");
+  const [svgContent, setSvgContent] = useState<string | null>(null);
   const [editorTheme, setEditorTheme] = useState<'light' | 'vs-dark'>('vs-dark');
   const [leftWidth, setLeftWidth] = useState(600);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
   const [showInputPanel, setShowInputPanel] = useState(true);
-  const svgContainerRef = useRef<HTMLDivElement>(null);
+  const [scriptsLoaded, setScriptsLoaded] = useState(false);
+  const [scriptError, setScriptError] = useState<string | null>(null);
+  
+  const graphContainerRef = useRef<HTMLDivElement>(null);
   const isDraggingResize = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
 
+  // Load scripts dynamically
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.$) return;
+
+    const loadScript = (src: string): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        
+        script.onload = () => {
+          console.log(`Successfully loaded: ${src}`);
+          resolve();
+        };
+        
+        script.onerror = () => {
+          console.error(`Failed to load: ${src}`);
+          reject(new Error(`Failed to load script: ${src}`));
+        };
+
+        document.body.appendChild(script);
+      });
+    };
+
+    const loadGraphviz = async () => {
+      try {
+        console.log('Starting script loading...');
+        
+        // Load jQuery first
+        await loadScript('https://code.jquery.com/jquery-2.1.3.min.js');
+        console.log('jQuery loaded successfully');
+        
+        // Load dependencies
+        await Promise.all([
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-color/2.1.2/jquery.color.min.js')
+        ]);
+        console.log('Dependencies loaded successfully');
+        
+        // Load Graphviz plugin
+        
+        await loadScript('/js/jquery.graphviz.svg.js');
+        console.log('Graphviz plugin loaded successfully');
+        
+        setScriptsLoaded(true);
+        setScriptError(null);
+        
+        // Initialize if SVG content is already available
+        if (svgContent) {
+          initializeGraphviz();
+        }
+      } catch (error) {
+        console.error('Script loading error:', error);
+        setScriptError(`Failed to load required scripts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    };
+
+    loadGraphviz();
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+
+  // Initialize Graphviz when SVG content changes or scripts load
+  useEffect(() => {
+    if (scriptsLoaded && svgContent) {
+      initializeGraphviz();
+    }
+  }, [svgContent, scriptsLoaded]);
+
+  const initializeGraphviz = () => {
+    if (!window.$ || !graphContainerRef.current) {
+      console.error('jQuery or container not available');
+      return;
+    }
+
+    try {
+      console.log('Initializing Graphviz...');
+      $(graphContainerRef.current).empty().graphviz({
+        svg: svgContent,
+        ready: function(this: any) {
+          console.log('Graphviz initialized successfully');
+          const gv = this;
+          
+          // Node click highlighting
+          gv.nodes().click(function(this: any) {
+            let $set = $(this);
+            $set = $set.add(gv.linkedFrom(this, true));
+            $set = $set.add(gv.linkedTo(this, true));
+            gv.highlight($set, true);
+            gv.bringToFront($set);
+          });
+          
+          // ESC key to clear highlights
+          $(document).keydown(function(evt: any) {
+            if (evt.key === 'Escape') {
+              gv.highlight();
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Graphviz initialization error:', error);
+      setError('Failed to initialize visualization');
+    }
+  };
+
   const handleVisualize = async () => {
     setIsLoading(true);
     setError(null);
+    setScriptError(null);
     
     try {
-      const response = await fetch('http://localhost:5000/visualize', {
+      const response = await fetch('http://localhost:5000/source', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,12 +158,9 @@ export default function VisualizerPage() {
         throw new Error(result.error);
       }
 
-      setSvgOutput(result.svg);
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
+      setSvgContent(result.svg);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      setSvgOutput(`<svg><text x="10" y="20" fill="red">Error: ${error}</text></svg>`);
     } finally {
       setIsLoading(false);
     }
@@ -73,27 +185,6 @@ export default function VisualizerPage() {
 
   const toggleTheme = () => {
     setEditorTheme(prev => (prev === 'vs-dark' ? 'light' : 'vs-dark'));
-  };
-
-  const handleZoom = (delta: number) => {
-    setScale(prev => Math.max(0.1, Math.min(prev + delta, 3)));
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setPosition(prev => ({
-      x: prev.x + e.movementX,
-      y: prev.y + e.movementY
-    }));
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
@@ -264,49 +355,25 @@ export default function VisualizerPage() {
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">Visualisasi</h2>
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="text-sm text-gray-500">
-              <Timestamp />
-            </div>
-            <div className="flex gap-1">
-              <button 
-                onClick={() => handleZoom(-0.1)} 
-                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                disabled={scale <= 0.1}
-              >
-                -
-              </button>
-              <span className="px-2 py-1 text-sm">{(scale * 100).toFixed(0)}%</span>
-              <button 
-                onClick={() => handleZoom(0.1)} 
-                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                disabled={scale >= 3}
-              >
-                +
-              </button>
-              <button 
-                onClick={() => {
-                  setScale(1);
-                  setPosition({ x: 0, y: 0 });
-                }} 
-                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
-              >
-                Reset
-              </button>
-            </div>
+          <div className="text-sm text-gray-500">
+            <Timestamp />
           </div>
         </div>
+
+        {scriptError && (
+          <div className="text-red-500 p-4 mb-4 border border-red-200 bg-red-50 rounded">
+            <p className="font-bold">Script Loading Error:</p>
+            <p>{scriptError}</p>
+            <p className="mt-2 text-sm">Please refresh the page or check your network connection.</p>
+          </div>
+        )}
         
         <div 
-          ref={svgContainerRef}
-          className="flex-1 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 overflow-hidden relative"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          ref={graphContainerRef}
+          className="flex-1 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 overflow-auto relative"
+          style={{ minHeight: '500px' }}
         >
-          {svgOutput.includes('Visualisasi akan tampil di sini') ? (
+          {!svgContent && !scriptError && (
             <div className="absolute inset-0 flex items-center justify-center text-gray-500">
               <div className="text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -316,16 +383,10 @@ export default function VisualizerPage() {
                 <p className="text-sm mt-1">Klik tombol "Visualisasikan" untuk melihat hasil</p>
               </div>
             </div>
-          ) : (
-            <div 
-              className="w-full h-full"
-              style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                transformOrigin: '0 0'
-              }}
-              dangerouslySetInnerHTML={{ __html: svgOutput }}
-            />
           )}
+        </div>
+        <div className="text-sm text-gray-600 mt-2">
+          Click node to highlight; Shift-scroll to zoom; Esc to unhighlight
         </div>
       </div>
     </div>

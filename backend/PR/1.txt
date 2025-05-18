@@ -1,0 +1,174 @@
+bikin api yang menjelaskan class dan method yang ada didalamnya, atau fungsi yang ada di dalamnya, trus ada main yang menjelaskan isi dari kode
+
+contoh req body
+{
+    "code" : "class Engine:
+    def __init__(self, horsepower):
+        self.horsepower = horsepower
+
+    def start(self):
+        return "Engine started with {} horsepower".format(self.horsepower)
+
+    def stop(self):
+        return "Engine stopped"
+
+class Car:
+    def __init__(self, horsepower):
+        self.engine = Engine(horsepower)  # Car bergantung pada Engine
+
+    def start_car(self):
+        return f"{self.engine.start()}"
+
+    def stop_car(self):
+        return f"{self.engine.stop()}"
+
+def main():
+    my_car = Car(150)  # Membuat objek Car dengan 150 tenaga kuda
+    print(my_car.start_car())  # Memulai mobil
+    print(my_car.stop_car())   # Menghentikan mobil
+
+def funca(a):
+    return f"Function {a} "
+
+main()
+a=5
+funca(a)
+a=10
+funca(a)
+"
+}
+
+contoh response
+
+{
+    "class" :
+        [
+            {
+                "id" : 1
+                "classname" : "Engine"
+                "method" :
+                    [
+                        {
+                            "methodName" : "__init__"
+                            "code" : "def __init__(self, horsepower):
+        self.horsepower = horsepower"
+                        },
+                        {
+                            "methodName" : "start"
+                            "code" : "def start(self):
+        return "Engine started with {} horsepower".format(self.horsepower)"
+                        },
+                        {
+                            "methodName" : "stop"
+                            "code" : "def stop(self):
+        return "Engine stopped""
+                        },
+                    ]
+            },
+            {
+                "id" : 2
+                "classname" : "Car"
+                "method" :
+                    [
+                        {
+                            "methodName" : "__init__"
+                            "code" : "def __init__(self, horsepower):
+        self.engine = Engine(horsepower)  # Car bergantung pada Engine"
+                        },
+                        {
+                            "methodName" : "start_car"
+                            "code" : "def start_car(self):
+        return f"{self.engine.start()}""
+                        },
+                        {
+                            "methodName" : "stop_car"
+                            "code" : "def stop_car(self):
+        return f"{self.engine.stop()}""
+                        },
+                    ]
+            }
+        ],
+    "function" :
+        [
+            {
+                "id" : 1,
+                "functionName" : "main",
+                "code":"def main():
+    my_car = Car(150)  # Membuat objek Car dengan 150 tenaga kuda
+    print(my_car.start_car())  # Memulai mobil
+    print(my_car.stop_car())   # Menghentikan mobil
+"
+            },
+            {
+                "id" : 2,
+                "functionName" : "funca",
+                "code":"def funca(a):
+    return f"Function {a} ""
+            }
+    ],
+    "main" : "main()
+a=5
+funca(a)
+a=10
+funca(a)"
+}
+
+from flask import Flask, request, jsonify
+import ast
+
+app = Flask(__name__)
+
+def parse_code(code):
+    """
+    Function to parse the Python code and extract classes, methods, and functions.
+    This will also separate the main body of code outside of classes and functions.
+    """
+    tree = ast.parse(code)
+    result = {'class': [], 'function': [], 'main': ''}
+
+    # Extract functions and classes
+    main_code = []
+    # print(tree)
+    for node in tree.body:
+        print("Node:", ast.unparse(node))
+        if isinstance(node, ast.FunctionDef):
+            func_data = {
+                'id': len(result['function']) + 1,
+                'functionName': node.name,
+                'code': ast.unparse(node)
+            }
+            result['function'].append(func_data)
+        elif isinstance(node, ast.ClassDef):
+            class_data = {
+                'id': len(result['class']) + 1,
+                'classname': node.name,
+                'method': []
+            }
+            # Extract methods within the class
+            for class_node in node.body:
+                if isinstance(class_node, ast.FunctionDef):
+                    method_data = {
+                        'methodName': class_node.name,
+                        'code': ast.unparse(class_node)
+                    }
+                    class_data['method'].append(method_data)
+            result['class'].append(class_data)
+        else:
+            # Capture any code outside classes and functions as 'main'
+            main_code.append(ast.unparse(node))
+
+    result['main'] = "\n".join(main_code)  # Join all main code parts together
+
+    return result
+
+@app.route('/parse', methods=['POST'])
+def parse():
+    code = request.json.get('code')
+    if not code:
+        return jsonify({'error': 'No code provided'}), 400
+
+    parsed_data = parse_code(code)
+    return jsonify(parsed_data)
+
+if __name__ == '__main__':
+    app.run(debug=True)

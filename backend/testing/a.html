@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draggable Graphviz SVG</title>
+    <style>
+        #graph-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="graph-container">
+        <!-- Paste your Graphviz SVG here or load it dynamically -->
+        <svg source xmlns="http://www.w3.org/2000/svg">
+            <!-- SVG content from Graphviz -->
+            <g id="node1" class="node">
+                <!-- node content -->
+            </g>
+            <g id="cluster1" class="cluster">
+                <!-- subgraph content -->
+            </g>
+        </svg>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make all nodes draggable
+            document.querySelectorAll('.node, .cluster').forEach(element => {
+                makeDraggable(element);
+            });
+            
+            function makeDraggable(element) {
+                let selectedElement = null;
+                let offset = { x: 0, y: 0 };
+                
+                element.addEventListener('mousedown', startDrag);
+                
+                function startDrag(e) {
+                    // Prevent text selection during drag
+                    e.preventDefault();
+                    
+                    selectedElement = element;
+                    const mouseX = e.clientX;
+                    const mouseY = e.clientY;
+                    
+                    // Get current transform
+                    const transform = selectedElement.getAttribute('transform');
+                    let currentX = 0, currentY = 0;
+                    
+                    if (transform) {
+                        const translate = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+                        if (translate) {
+                            currentX = parseFloat(translate[1]);
+                            currentY = parseFloat(translate[2]);
+                        }
+                    }
+                    
+                    offset.x = mouseX - currentX;
+                    offset.y = mouseY - currentY;
+                    
+                    document.addEventListener('mousemove', dragElement);
+                    document.addEventListener('mouseup', stopDrag);
+                }
+                
+                function dragElement(e) {
+                    if (selectedElement) {
+                        const x = e.clientX - offset.x;
+                        const y = e.clientY - offset.y;
+                        selectedElement.setAttribute('transform', `translate(${x}, ${y})`);
+                    }
+                }
+                
+                function stopDrag() {
+                    selectedElement = null;
+                    document.removeEventListener('mousemove', dragElement);
+                    document.removeEventListener('mouseup', stopDrag);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

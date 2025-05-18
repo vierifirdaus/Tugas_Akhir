@@ -1,14 +1,3 @@
-from py2cfg import CFGBuilder
-
-def visualize(code: str) -> str:
-    cfg_builder = CFGBuilder()
-    cfg = cfg_builder.build_from_src("dot", code)
-    cfg.build_visual(f'backend/testing/output/cfg', 'dot')
-
-    f = open("backend/testing/output/cfg.dot", "r")
-    return f.read()
-
-code = """
 class Engine:
     def __init__(self, horsepower):
         self.horsepower = horsepower
@@ -34,6 +23,11 @@ def main():
     print(my_car.start_car()) 
     print(my_car.stop_car())  
 
-"""
-print(visualize(code))
+def funca(a):
+    return f"Function {a} "
 
+main()
+a=5
+funca(a)
+a=10
+funca(a)

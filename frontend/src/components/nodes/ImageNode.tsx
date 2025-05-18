@@ -1,0 +1,18 @@
+// components/nodes/ImageNode.tsx
+import { Handle, Position } from '@xyflow/react';
+
+export default function ImageNode({ data }: any) {
+  return (
+    <div style={{ padding: 6, background: '#fff', borderRadius: 8, border: '1px solid #222' }}>
+      <img
+        src={data.src}       // contoh '/engine_init.svg'
+        alt={data.label}
+        width={60}
+        height={60}
+        style={{ display: 'block' }}
+      />
+      <Handle type="source" position={Position.Bottom} id="out" />
+      <Handle type="target" position={Position.Top}    id="in"  />
+    </div>
+  );
+}

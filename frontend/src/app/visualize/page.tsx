@@ -23,7 +23,7 @@ export default function VisualizerPage() {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:5000/visualize', {
+      const response = await fetch('http://localhost:5000/source', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,21 +31,18 @@ export default function VisualizerPage() {
         body: JSON.stringify({ code: sourceCode })
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
       
-      if (result.error) {
-        throw new Error(result.error);
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
       }
 
       // Update the SVG output with the visualization
-      setSvgOutput(result.svg);
+      setSvgOutput(result.svg || '<svg><text x="10" y="20">No visualization generated</text></svg>');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      setSvgOutput(`<svg><text x="10" y="20" fill="red">Error: ${error}</text></svg>`);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      setSvgOutput(`<svg width="400" height="100"><text x="20" y="40" fill="red">Error: ${errorMessage}</text></svg>`);
     } finally {
       setIsLoading(false);
     }
