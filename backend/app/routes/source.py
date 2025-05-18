@@ -25,11 +25,11 @@ def source():
             cfg_builder = CFGBuilder()
             cfg = cfg_builder.build_from_src(base_filename, code)
             
-            cfg.build_visual(output_path, 'dot')
+            cfg.build_visual(output_path, 'dot', show=False)
             dot_file = output_path + '.dot'
-            
             with open(dot_file, 'r', encoding='utf-8') as f:
                 dot_content = f.read()
+
             
             parser = GraphParser.GraphParser(dot_content)
             graphviz_output = parser.graphViz()
