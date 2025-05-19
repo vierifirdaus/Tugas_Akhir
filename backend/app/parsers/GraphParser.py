@@ -1,4 +1,6 @@
 import regex
+import re
+import graphviz
 from .Graph import Graph
 from .Node import Node
 from .NodeLabel import NodeLabel
@@ -17,16 +19,14 @@ class GraphParser:
         self.type = None
         self.parent = parent  
         self.from_str(input_str)
-        self.assign_type()
 
     def from_str(self, input_str):
         header_match = regex.match(r'(subgraph|digraph)?\s*(\w+)?\s*{', input_str.strip())
         if header_match:
-            # print("res split ",header_match.group(2).split("0"))
-            if(len(header_match.group(2).split("0")) > 1) :
-                self.name = header_match.group(2).split("0")[1] or "Unnamed"
-            else :
-                self.name = header_match.group(2) or "Unnamed"
+            raw_name = header_match.group(2) or "Unnamed"
+            self.name = re.sub(r'^cluster\d*_?', '', raw_name)
+        else:
+            self.name = "Unnamed"
 
         start = input_str.find("{") + 1
         end = input_str.rfind("}")
@@ -35,8 +35,8 @@ class GraphParser:
 
         content = input_str[start:end].strip()
         blocks = regex.findall(
-            r'(?:[A-Za-z0-9]+\s*\[.*?\])|'
-            r'(?:[A-Za-z0-9]+\s*->\s*[A-Za-z0-9]+\s*\[.*?\])|'
+            r'(?:[A-Za-z0-9_]+\s*\[.*?\])|'
+            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[.*?\])|'
             r'(?:graph\s*\[.*?\])|'
             r'(?:node\s*\[.*?\])|'
             r'(?:edge\s*\[.*?\])|'
@@ -46,7 +46,6 @@ class GraphParser:
             regex.DOTALL
         )
         for block in blocks:
-
             block = block.strip()
             if block.startswith("graph"):
                 self.graph = Graph(block)
@@ -56,7 +55,7 @@ class GraphParser:
                 self.edgeLabel = EdgeLabel(block)
             elif block.startswith("subgraph") or block.startswith("digraph"):
                 sub_parser = GraphParser(block, parent=self)  
-                if(sub_parser.name == "cluster_KEY") :
+                if sub_parser.name == "KEY":
                     continue
                 self.subGraph.append(sub_parser)
             elif "->" in block:
@@ -64,75 +63,91 @@ class GraphParser:
                     self.edge.append(Edge(block))
                 except Exception as e:
                     print(f"Failed to parse edge: {e}")
-            elif regex.match(r'^[A-Za-z0-9]+\s*\[.*\]$', block, regex.DOTALL):
+            elif regex.match(r'^[A-Za-z0-9_]+\s*\[.*\]$', block, regex.DOTALL):
                 try:
                     self.node.append(Node(block))
                 except Exception as e:
                     print(f"Failed to parse node: {e}")
             else:
                 print(f"[!] Tidak dikenali dan dilewati: {block}")
+
+        # assign type setelah seluruh subgraph di-parse
+        for sub in self.subGraph:
+            sub.assign_type()
+        self.assign_type()
+
     def assign_type(self):
-        # Jika ada subgraph bernama 'main', set type 'main'
+        if self.parent is None:
+            self.type = 'dot'
+            return
+
         if self.name and self.name.lower() == 'main':
             self.type = 'main'
             return
 
-        # Cek apakah ada subgraph yang punya child subgraph, untuk type 'class'
-        has_subgraph_with_child = any(len(sg.subGraph) > 0 for sg in self.subGraph)
-        if has_subgraph_with_child:
-            self.type = 'class'
-            return
 
-        # Hitung parent dan child subgraph
-        parent_count = 1 if self.parent is not None else 0
-        child_count = len(self.subGraph)
+        if self.subGraph:
+            if getattr(self.parent, 'parent', None) == None:
+                self.type = 'class'
+                return
 
-        # Jika 1 parent dan 1 child -> method
-        if parent_count == 1 and child_count == 1:
+        if getattr(getattr(self.parent, 'parent', None), 'parent', None) == None and getattr(self.parent, 'name', None) != 'main':
             self.type = 'method'
             return
 
-        # Jika hanya 1 child -> function
-        if child_count == 1:
-            self.type = 'function'
-            return
-
-        # Jika tidak memenuhi kriteria di atas, bisa set None atau 'unknown'
         self.type = None
 
     def print(self, indent=0):
         indent_str = "   " * indent
         print(f"{indent_str}Graph Name: {self.name}")
-        print(f"{indent_str}Graph:", self.graph)
-        print(f"{indent_str}Node Label:", self.nodeLabel)
-        print(f"{indent_str}Edge Label:", self.edgeLabel)
-        print(f"{indent_str}Nodes:")
+        print(f"{indent_str}Type      : {self.type}")
+        print(f"{indent_str}Graph     : {self.graph}")
+        print(f"{indent_str}Node Label: {self.nodeLabel}")
+        print(f"{indent_str}Edge Label: {self.edgeLabel}")
+        print(f"{indent_str}Nodes     :")
         for n in self.node:
             print(f"{indent_str}  -", n)
-        print(f"{indent_str}Edges:")
+        print(f"{indent_str}Edges     :")
         for e in self.edge:
             print(f"{indent_str}  -", e)
-        
-        print(f"{indent_str}Subgraphs:")
+        print(f"{indent_str}Subgraphs :")
         for sg in self.subGraph:
-            print(f"{indent_str}  - Subgraph: {sg.name}")
-            sg.print(indent=indent+1)  
-    def collectionSubGraph(self) :
+            print(f"{indent_str}  - Subgraph: {sg.name} (type: {sg.type})")
+            sg.print(indent=indent+1)
+
+    def collectionSubGraph(self):
         res = {}
         for subgraph in self.subGraph:
-            if subgraph.name == "cluster_KEY" :
+            if subgraph.name == "KEY":
                 continue
             res[subgraph.name] = subgraph.graphViz()
         return res
-            
+    
+    import graphviz
+
+    def collectionMethod(self):
+        res = []
+        for subgraph in self.subGraph:
+            # print(f"class name: {subgraph.name} (type: {subgraph.type})")
+            if subgraph.type == "class":
+                method_arr = []
+                for method in subgraph.subGraph:
+                    print(f"method name: {method.name} (type: {method.type})")
+                    if method.type == "method":
+                        svg_str = graphviz.Source(method.graphViz(), format='svg').pipe().decode('utf-8')
+                        method_arr.append({method.name: svg_str})
+                if method_arr:
+                    res.append({subgraph.name: method_arr})
+            res += subgraph.collectionMethod()
+        return res
+
+    
+    
+
     def graphViz(self, indent=0):
         indent_str = "  " * indent
         lines = []
-        # Graph header
-        print("type",self.type)
-        print("name",self.name)
         if self.name:
-            # Check if any edge uses '->' to determine if it's a digraph
             is_digraph = False
             if "cfg" in self.name:
                 is_digraph = True
@@ -140,7 +155,6 @@ class GraphParser:
                 is_digraph = True 
             if indent == 0:
                 is_digraph = True
-            # is_digraph = any(hasattr(e, 'direction') and e.direction == "->" for e in self.edge)
             graph_type = "digraph" if is_digraph else "subgraph"
             lines.append(f"{indent_str}{graph_type} {self.name} {{")
         else:
@@ -162,7 +176,7 @@ class GraphParser:
         for subgraph in self.subGraph:
             lines.append(f"{subgraph.graphViz(indent + 1)}")
 
-                    # Nodes
+        # Nodes
         for node in self.node:
             lines.append(f"{indent_str}  {node.graphViz()}")
         # Edges
