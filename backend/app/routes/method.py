@@ -30,6 +30,9 @@ def method():
 
             parser = GraphParser.GraphParser(dot_content)
 
+            print("check parsing result")
+            # parser.print()
+
             collectionMethod = parser.collectionMethod()
             
             return jsonify({

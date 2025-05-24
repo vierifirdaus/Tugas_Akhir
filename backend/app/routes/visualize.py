@@ -21,13 +21,13 @@ def visualize_code():
         cfg_builder = CFGBuilder()
         cfg = cfg_builder.build_from_src(base_filename, code)
         
-        cfg.build_visual(output_path, 'svg', show=False)
-        svg_file = output_path + '.svg'
-        with open(svg_file, 'r') as f:
-            svg_content = f.read()
+        cfg.build_visual(output_path, 'dot', show=False)
+        dot_file = output_path + '.dot'
+        with open(dot_file, 'r') as f:
+            dot_content = f.read()
         
         return jsonify({
-            'svg': svg_content
+            'dot': dot_content
         })
         
     except Exception as e:

@@ -35,7 +35,7 @@ class GraphParser:
 
         content = input_str[start:end].strip()
         blocks = regex.findall(
-            r'(?:[A-Za-z0-9_]+\s*\[.*?\])|'
+            r'(?:[A-Za-z0-9_]+\s*\[.*?\];)|'
             r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[.*?\])|'
             r'(?:graph\s*\[.*?\])|'
             r'(?:node\s*\[.*?\])|'
@@ -47,6 +47,7 @@ class GraphParser:
         )
         for block in blocks:
             block = block.strip()
+            # print(f"masuk block {block}")
             if block.startswith("graph"):
                 self.graph = Graph(block)
             elif block.startswith("node"):
@@ -63,7 +64,7 @@ class GraphParser:
                     self.edge.append(Edge(block))
                 except Exception as e:
                     print(f"Failed to parse edge: {e}")
-            elif regex.match(r'^[A-Za-z0-9_]+\s*\[.*\]$', block, regex.DOTALL):
+            elif regex.match(r'^[A-Za-z0-9_]+\s*\[.*\];$', block, regex.DOTALL):
                 try:
                     self.node.append(Node(block))
                 except Exception as e:
@@ -127,6 +128,7 @@ class GraphParser:
 
     def collectionMethod(self):
         res = []
+        print("masuk collectioin methodd")
         for subgraph in self.subGraph:
             # print(f"class name: {subgraph.name} (type: {subgraph.type})")
             if subgraph.type == "class":

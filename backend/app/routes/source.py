@@ -33,7 +33,7 @@ def source():
             
             parser = GraphParser.GraphParser(dot_content)
             graphviz_output = parser.graphViz()
-            print("resssss ", graphviz_output)
+            # print("resssss ", graphviz_output)
 
             svg_string = graphviz.Source(graphviz_output, format='svg').pipe().decode('utf-8')
             

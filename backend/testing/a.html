@@ -1,85 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Draggable Graphviz SVG</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Aplikasi Visualisasi Graf</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        #graph-container {
-            width: 100%;
-            height: 600px;
-            border: 1px solid #ccc;
-            overflow: auto;
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .placeholder-graph {
+            background-image: repeating-linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), repeating-linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+            background-position: 0 0, 4px 4px;
+            background-size: 8px 8px;
         }
     </style>
 </head>
-<body>
-    <div id="graph-container">
-        <!-- Paste your Graphviz SVG here or load it dynamically -->
-        <svg source xmlns="http://www.w3.org/2000/svg">
-            <!-- SVG content from Graphviz -->
-            <g id="node1" class="node">
-                <!-- node content -->
-            </g>
-            <g id="cluster1" class="cluster">
-                <!-- subgraph content -->
-            </g>
-        </svg>
+<body class="bg-gray-100 font-sans">
+    <div class="flex flex-col md:flex-row h-screen">
+        <div class="w-full md:w-1/3 bg-white p-6 shadow-lg flex flex-col space-y-4 overflow-y-auto">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Input Kode & Kontrol</h2>
+
+            <div>
+                <label for="codeInput" class="block text-sm font-medium text-gray-700 mb-1">Kode Program Python:</label>
+                <textarea id="codeInput" name="codeInput" rows="10" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="Masukkan atau tempel kode Python Anda di sini..."></textarea>
+            </div>
+
+            <div>
+                <label for="fileUpload" class="block text-sm font-medium text-gray-700 mb-1">Atau Unggah Berkas (.py):</label>
+                <input type="file" id="fileUpload" name="fileUpload" accept=".py" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+            </div>
+
+            <div>
+                <label for="graphType" class="block text-sm font-medium text-gray-700 mb-1">Pilih Jenis Graf:</label>
+                <select id="graphType" name="graphType" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    <option value="cfg">Control Flow Graph (CFG)</option>
+                    <option value="cg">Call Graph (CG)</option>
+                    <option value="pdg">Program Dependency Graph (PDG)</option>
+                </select>
+            </div>
+            
+            <div id="specificControlsContainer" class="hidden">
+                 <label for="functionSelect" class="block text-sm font-medium text-gray-700 mb-1">Pilih Fungsi/Metode (untuk CFG):</label>
+                 <select id="functionSelect" name="functionSelect" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    <option value="main">Main Code</option>
+                    </select>
+            </div>
+
+            <button id="visualizeButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                Visualisasikan
+            </button>
+
+            <div id="feedbackMessage" class="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg hidden">
+                </div>
+        </div>
+
+        <div class="w-full md:w-2/3 bg-gray-200 p-6 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Visualisasi Graf</h2>
+                <button id="downloadButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out text-sm">
+                    Unduh Visualisasi (SVG)
+                </button>
+            </div>
+            
+            <div id="graphCanvas" class="flex-grow bg-white border border-gray-300 rounded-lg shadow-inner placeholder-graph flex items-center justify-center">
+                <p class="text-gray-500 text-lg">Area Visualisasi Graf (React Xyflow)</p>
+                </div>
+            
+            <div class="mt-4 flex justify-center space-x-2">
+                <button class="p-2 bg-gray-300 hover:bg-gray-400 rounded-md text-gray-700 text-xs">Zoom In (+)</button>
+                <button class="p-2 bg-gray-300 hover:bg-gray-400 rounded-md text-gray-700 text-xs">Zoom Out (-)</button>
+                <button class="p-2 bg-gray-300 hover:bg-gray-400 rounded-md text-gray-700 text-xs">Reset Zoom</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Make all nodes draggable
-            document.querySelectorAll('.node, .cluster').forEach(element => {
-                makeDraggable(element);
-            });
-            
-            function makeDraggable(element) {
-                let selectedElement = null;
-                let offset = { x: 0, y: 0 };
-                
-                element.addEventListener('mousedown', startDrag);
-                
-                function startDrag(e) {
-                    // Prevent text selection during drag
-                    e.preventDefault();
-                    
-                    selectedElement = element;
-                    const mouseX = e.clientX;
-                    const mouseY = e.clientY;
-                    
-                    // Get current transform
-                    const transform = selectedElement.getAttribute('transform');
-                    let currentX = 0, currentY = 0;
-                    
-                    if (transform) {
-                        const translate = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-                        if (translate) {
-                            currentX = parseFloat(translate[1]);
-                            currentY = parseFloat(translate[2]);
-                        }
-                    }
-                    
-                    offset.x = mouseX - currentX;
-                    offset.y = mouseY - currentY;
-                    
-                    document.addEventListener('mousemove', dragElement);
-                    document.addEventListener('mouseup', stopDrag);
-                }
-                
-                function dragElement(e) {
-                    if (selectedElement) {
-                        const x = e.clientX - offset.x;
-                        const y = e.clientY - offset.y;
-                        selectedElement.setAttribute('transform', `translate(${x}, ${y})`);
-                    }
-                }
-                
-                function stopDrag() {
-                    selectedElement = null;
-                    document.removeEventListener('mousemove', dragElement);
-                    document.removeEventListener('mouseup', stopDrag);
-                }
+        // Script sederhana untuk menampilkan/menyembunyikan kontrol spesifik graf
+        // dan menampilkan pesan umpan balik (contoh)
+        const graphTypeSelect = document.getElementById('graphType');
+        const specificControlsContainer = document.getElementById('specificControlsContainer');
+        const visualizeButton = document.getElementById('visualizeButton');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const codeInput = document.getElementById('codeInput');
+        const fileUpload = document.getElementById('fileUpload');
+
+        graphTypeSelect.addEventListener('change', function() {
+            if (this.value === 'cfg') {
+                specificControlsContainer.classList.remove('hidden');
+            } else {
+                specificControlsContainer.classList.add('hidden');
             }
         });
+
+        visualizeButton.addEventListener('click', function() {
+            feedbackMessage.classList.remove('hidden');
+            if (!codeInput.value && !fileUpload.value) {
+                 feedbackMessage.textContent = 'Harap masukkan kode atau unggah berkas terlebih dahulu.';
+                 feedbackMessage.classList.remove('bg-gray-50', 'text-gray-600');
+                 feedbackMessage.classList.add('bg-red-100', 'text-red-700');
+                 return;
+            }
+            
+            feedbackMessage.textContent = 'Menganalisis kode dan menghasilkan graf...';
+            feedbackMessage.classList.remove('bg-red-100', 'text-red-700');
+            feedbackMessage.classList.add('bg-blue-50', 'text-blue-700');
+
+
+            // Simulasi proses visualisasi
+            setTimeout(() => {
+                feedbackMessage.textContent = `Graf (${graphTypeSelect.options[graphTypeSelect.selectedIndex].text}) berhasil divisualisasikan!`;
+                feedbackMessage.classList.remove('bg-blue-50', 'text-blue-700');
+                feedbackMessage.classList.add('bg-green-50', 'text-green-700');
+
+                // Placeholder: Ganti area visualisasi dengan sesuatu yang menandakan graf sudah ada
+                const graphCanvas = document.getElementById('graphCanvas');
+                graphCanvas.innerHTML = '<p class="text-green-600 text-xl font-semibold">Graf Ditampilkan di Sini!</p>';
+                graphCanvas.classList.remove('placeholder-graph');
+            }, 2000);
+        });
+
+        // Placeholder untuk tombol unduh
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            feedbackMessage.classList.remove('hidden');
+            feedbackMessage.textContent = 'Fungsi unduh belum diimplementasikan dalam mockup ini.';
+            feedbackMessage.classList.remove('bg-green-50', 'text-green-700', 'bg-blue-50', 'text-blue-700');
+            feedbackMessage.classList.add('bg-yellow-50', 'text-yellow-700');
+        });
+
     </script>
 </body>
 </html>
