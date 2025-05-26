@@ -47,7 +47,6 @@ class GraphParser:
         )
         for block in blocks:
             block = block.strip()
-            # print(f"masuk block {block}")
             if block.startswith("graph"):
                 self.graph = Graph(block)
             elif block.startswith("node"):

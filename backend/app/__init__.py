@@ -11,6 +11,7 @@ def create_app():
     from .routes.method import method_bp
     from .routes.attribute import attribute_bp
     from .routes.call_graph import call_graph_bp
+    from .routes.pdg import pdg_bp
 
     app.register_blueprint(visualize_bp)
     app.register_blueprint(source_bp)
@@ -18,5 +19,6 @@ def create_app():
     app.register_blueprint(method_bp)
     app.register_blueprint(attribute_bp)
     app.register_blueprint(call_graph_bp)
-
+    app.register_blueprint(pdg_bp)
+    
     return app
