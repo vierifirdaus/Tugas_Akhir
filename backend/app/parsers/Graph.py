@@ -14,6 +14,8 @@ class Graph:
         self.rankdir = None
         self.ranksep = None
         self.color = None
+        self.style = None
+        self.shape = None
 
         start = input_str.find("[") + 1
         end = input_str.find("]")
@@ -32,10 +34,12 @@ class Graph:
         self.rankdir = attrs.get("rankdir")
         self.ranksep = attrs.get("ranksep")
         self.color = attrs.get("color")
+        self.style = attrs.get("style")
+        self.shape = attrs.get("shape")
 
 
     def __str__(self):
-        return f"Graph(bb={self.bb}, compound={self.compound}, fontname={self.fontname}, label={self.label}, lheight={self.lheight}, lp={self.lp}, lwidth={self.lwidth}, pack={self.pack}, rankdir={self.rankdir}, ranksep={self.ranksep}, color={self.color})"
+        return f"Graph(bb={self.bb}, compound={self.compound}, fontname={self.fontname}, label={self.label}, lheight={self.lheight}, lp={self.lp}, lwidth={self.lwidth}, pack={self.pack}, rankdir={self.rankdir}, ranksep={self.ranksep}, color={self.color}, style={self.style}, shape={self.shape})"
     def graphViz(self):
         attrs = []
         
@@ -75,21 +79,33 @@ class Graph:
             attrs.append(f'ranksep={self.ranksep}')
         if self.color is not None:
             attrs.append(f'color="{self.color}"')
-        
+        if self.style is not None:
+            strStyle = ""
+            lenStrStyle = len(self.style)
+            if isinstance(self.style, str):
+                attrs.append(f'style="{self.style}"')
+            else:
+                for i in range(lenStrStyle):
+                    if i == 0:
+                        strStyle += str(self.style[i])
+                    else:
+                        strStyle += "," + str(self.style[i])
+                attrs.append(f'style="{strStyle}"')
+        if self.shape is not None:
+            attrs.append(f'shape={self.shape}')
         if attrs:
             return f'graph [{", ".join(attrs)}]'
         return ''
 
-# input = r"""graph [bb="0,0,610,342.25",
-# 		compound=True,
-# 		fontname="DejaVu Sans Mono",
-# 		label=cfg,
-# 		lheight=0.24,
-# 		lp="305,12.625",
-# 		lwidth=0.26,
-# 		pack=False,
-# 		rankdir=TB,
-# 		ranksep=0.02
-# 	];"""
+input = r"""graph [bb="3355,142.5,4097,295.75",
+				color=purple,
+				compound=true,
+				fontname="DejaVu Sans Mono",
+				label="",
+				rankdir=TB,
+				ranksep=0.02,
+				shape=tab,
+				style=filled
+			];"""
 # graph = Graph(input)
 # print(graph.graphViz())

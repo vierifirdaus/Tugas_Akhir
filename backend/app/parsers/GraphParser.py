@@ -8,7 +8,9 @@ from .Edge import Edge
 from .EdgeLabel import EdgeLabel
 
 class GraphParser:
-    def __init__(self, input_str, parent=None):
+    def __init__(self, input_str, parent=None, types=None):
+        if(parent is None):
+            print("input std ",input_str)
         self.name = None
         self.graph = None
         self.nodeLabel = None
@@ -18,13 +20,15 @@ class GraphParser:
         self.edge = []
         self.type = None
         self.parent = parent  
+        self.typeCode = types
         self.from_str(input_str)
-
     def from_str(self, input_str):
         header_match = regex.match(r'(subgraph|digraph)?\s*(\w+)?\s*{', input_str.strip())
         if header_match:
             raw_name = header_match.group(2) or "Unnamed"
             self.name = re.sub(r'^cluster\d*_?', '', raw_name)
+            if(self.name=='_init__') :
+                self.name = '__init__'
         else:
             self.name = "Unnamed"
 
@@ -54,7 +58,7 @@ class GraphParser:
             elif block.startswith("edge"):
                 self.edgeLabel = EdgeLabel(block)
             elif block.startswith("subgraph") or block.startswith("digraph"):
-                sub_parser = GraphParser(block, parent=self)  
+                sub_parser = GraphParser(block, parent=self,types=self.typeCode)  
                 if sub_parser.name == "KEY":
                     continue
                 self.subGraph.append(sub_parser)
@@ -80,10 +84,10 @@ class GraphParser:
         if self.parent is None:
             self.type = 'dot'
             return
-
-        if self.name and self.name.lower() == 'main':
-            self.type = 'main'
-            return
+        if self.typeCode is not None :
+            if self.name in self.typeCode['function']:
+                self.type = 'function'
+                return
 
 
         if self.subGraph:
@@ -123,17 +127,13 @@ class GraphParser:
             res[subgraph.name] = subgraph.graphViz()
         return res
     
-    import graphviz
-
     def collectionMethod(self):
         res = []
-        print("masuk collectioin methodd")
         for subgraph in self.subGraph:
             # print(f"class name: {subgraph.name} (type: {subgraph.type})")
             if subgraph.type == "class":
                 method_arr = []
                 for method in subgraph.subGraph:
-                    print(f"method name: {method.name} (type: {method.type})")
                     if method.type == "method":
                         svg_str = graphviz.Source(method.graphViz(), format='svg').pipe().decode('utf-8')
                         method_arr.append({method.name: svg_str})
@@ -142,9 +142,15 @@ class GraphParser:
             res += subgraph.collectionMethod()
         return res
 
-    
-    
-
+    def collectionFunction(self) :
+        res = []
+        for subgraph in self.subGraph:
+            if subgraph.type == "function":
+                # print("Function name:", subgraph.graphViz())
+                svg_str = graphviz.Source(subgraph.graphViz(), format='svg').pipe().decode('utf-8')
+                res.append({subgraph.name: svg_str})
+            res += subgraph.collectionFunction()
+        return res
     def graphViz(self, indent=0):
         indent_str = "  " * indent
         lines = []
@@ -157,7 +163,7 @@ class GraphParser:
             if indent == 0:
                 is_digraph = True
             graph_type = "digraph" if is_digraph else "subgraph"
-            lines.append(f"{indent_str}{graph_type} {self.name} {{")
+            lines.append(f"{indent_str}{graph_type} cluster_{self.name} {{")
         else:
             lines.append(f"{indent_str}digraph {{")
         

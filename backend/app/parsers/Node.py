@@ -11,6 +11,7 @@ class Node:
         self.shape = None
         self.style = None
         self.width = None
+        self.color = None
 
         # Improved regex to handle complex attributes
         match = re.match(r'^\s*([a-zA-Z_]\w*|\d+)\s*\[(.*)\]', input_str.strip(), re.DOTALL)
@@ -39,9 +40,10 @@ class Node:
         self.shape = attrs.get("shape")
         self.style = attrs.get("style")
         self.width = attrs.get("width")
+        self.color = attrs.get("color")
 
     def __str__(self):
-        return f"Node(name={self.name}, fillcolor={self.fillcolor}, height={self.height}, label={self.label}, pos={self.pos}, shape={self.shape}, style={self.style}, width={self.width})"
+        return f"Node(name={self.name}, fillcolor={self.fillcolor}, height={self.height}, label={self.label}, pos={self.pos}, shape={self.shape}, style={self.style}, width={self.width}, color={self.color})"
 
     def graphViz(self):
         attrs = []
@@ -70,6 +72,9 @@ class Node:
             attrs.append(f'style="{strStyle}"')
         if self.width is not None:
             attrs.append(f'width={self.width}')
+
+        if self.color is not None:
+            attrs.append(f'color="{self.color}"')
         
         if attrs:
             return f'{self.name} [{", ".join(attrs)}]'
