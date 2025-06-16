@@ -59,25 +59,26 @@ def method():
             types = parse_code(code)
             parser = GraphParser.GraphParser(dot_content_code,types=types)
 
-            # print("check parsing result")
+            print("check parsing result")
             # parser.print()
 
             collectionMethod = parser.collectionMethod()
             collectionFunction = parser.collectionFunction()
-            
+            # collectionFunction = []
+            collectionMain = None
             mainCode = types['main']
-            print("Main code:", mainCode)
-            cfg_builder_main = CFGBuilder()
-            cfg_main = cfg_builder_main.build_from_src(base_filename_main, mainCode)
-            
-            cfg_main.build_visual(output_path_main, 'dot', show=False)
-            dot_file_main = output_path_main + '.dot'
-            with open(dot_file_main, 'r', encoding='utf-8') as f:
-                dot_content_main = f.read()
-            parserMain = GraphParser.GraphParser(dot_content_main,types=None)
-            parserMain.print()
-            parserMain = parserMain.graphViz()
-            collectionMain = graphviz.Source(parserMain, format='svg').pipe().decode('utf-8')
+            if mainCode != '':
+                cfg_builder_main = CFGBuilder()
+                cfg_main = cfg_builder_main.build_from_src(base_filename_main, mainCode)
+                
+                cfg_main.build_visual(output_path_main, 'dot', show=False)
+                dot_file_main = output_path_main + '.dot'
+                with open(dot_file_main, 'r', encoding='utf-8') as f:
+                    dot_content_main = f.read()
+                parserMain = GraphParser.GraphParser(dot_content_main,types=None)
+                parserMain = parserMain.graphViz()
+                print("parserMain", parserMain)
+                collectionMain = graphviz.Source(parserMain, format='svg').pipe().decode('utf-8')
 
             return jsonify({
                 'class': collectionMethod,

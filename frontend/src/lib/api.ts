@@ -8,7 +8,7 @@ import { VisualizeCodePayload, VisualizeCodeResponse, CallGraphResponse } from '
  * @returns Promise yang resolve dengan data hasil visualisasi.
  * @throws Error jika terjadi masalah pada API call.
  */
-export async function visualizePythonCode(payload: VisualizeCodePayload): Promise<VisualizeCodeResponse> {
+export async function fetchCFG(payload: VisualizeCodePayload): Promise<VisualizeCodeResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/method`, { // Asumsi endpoint utama adalah /method
       method: 'POST',

@@ -1,205 +1,167 @@
+# routes/call_graph_routes.py
 from flask import Blueprint, request, jsonify
 import ast
-import os # Tidak terpakai di logika utama, tapi ada di template Anda
+from typing import Dict, Any, List
 
-# Mengganti nama blueprint agar lebih deskriptif jika mau, tapi kita ikuti template Anda
 call_graph_bp = Blueprint('call_graph', __name__)
 
+# Daftar fungsi built-in yang umum untuk diabaikan
+BUILTIN_FUNCTIONS_TO_IGNORE = {
+    'print', 'range', 'isinstance', 'len', 'super', 'str', 'int', 'float', 'list', 'dict', 'set',
+    'ValueError', 'TypeError', 'Exception'
+}
+
+
 class CallGraphVisitor(ast.NodeVisitor):
+    """
+    AST Visitor yang lebih canggih untuk mengekstrak call graph.
+    - Menggunakan scope stack untuk menangani metode kelas dan fungsi standalone.
+    - Menginferensikan tipe variabel dari `isinstance` dan loop `for`.
+    - Mendeteksi pemanggilan pada `self` dan pada variabel yang tipenya diinferensikan.
+    """
     def __init__(self):
-        self.calls = []
-        self.current_class_name = None
-        self.current_method_name = None
-        # Menyimpan tipe yang diinferensikan untuk variabel dalam scope metode saat ini
-        # Contoh: {'item': 'Product', 'product': 'Product'}
-        self.method_scope_var_types = {}
-        # Menyimpan tipe untuk koleksi variabel instance (misalnya dari add_product)
-        # Contoh: {'ShoppingCart': {'items': 'Product'}} (artinya item dalam self.items adalah Product)
-        self.instance_var_collection_types = {}
+        self.calls = set()
+        self.scope_stack: List[str] = []
+        self.current_method_var_types: Dict[str, str] = {}
+        self.instance_var_collection_types: Dict[str, Dict[str, str]] = {}
 
-    def visit_ClassDef(self, node):
-        original_class_name = self.current_class_name
-        self.current_class_name = node.name
+    def get_current_scope(self) -> str:
+        return self.scope_stack[-1] if self.scope_stack else None
         
-        # Pra-pemindaian metode seperti 'add_product' untuk menginferensikan tipe untuk variabel instance
-        # Ini adalah heuristik yang disederhanakan untuk contoh spesifik
+    def get_current_class_scope(self) -> str:
+        if self.scope_stack and '.' in self.scope_stack[-1]:
+            return self.scope_stack[-1].split('.')[0]
+        # Jika scope saat ini adalah kelas itu sendiri
+        if self.scope_stack and '.' not in self.scope_stack[-1]:
+             return self.scope_stack[-1]
+        return None
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        self.scope_stack.append(node.name)
+        
+        # Pra-pemindaian untuk inferensi tipe koleksi dari `add_product` atau metode serupa
         for body_item in node.body:
-            if isinstance(body_item, ast.FunctionDef) and body_item.name == 'add_product':
-                param_name_for_type_check = None
-                param_type_inferred = None
-                collection_name_appended_to = None
+            if isinstance(body_item, ast.FunctionDef) and len(body_item.args.args) > 1:
+                param_name = body_item.args.args[1].arg
+                inferred_type = None
+                for stmt in body_item.body:
+                    if isinstance(stmt, ast.If) and isinstance(stmt.test, (ast.UnaryOp, ast.Call)):
+                        call_node = stmt.test.operand if isinstance(stmt.test, ast.UnaryOp) else stmt.test
+                        if isinstance(call_node, ast.Call) and isinstance(call_node.func, ast.Name) and \
+                           call_node.func.id == 'isinstance' and len(call_node.args) == 2 and \
+                           isinstance(call_node.args[0], ast.Name) and call_node.args[0].id == param_name and \
+                           isinstance(call_node.args[1], ast.Name):
+                            inferred_type = call_node.args[1].id
+                            break
+                if not inferred_type: continue
+                
+                for sub_node in ast.walk(body_item):
+                    if isinstance(sub_node, ast.Call) and isinstance(sub_node.func, ast.Attribute) and \
+                       sub_node.func.attr == 'append' and isinstance(sub_node.func.value, ast.Attribute) and \
+                       isinstance(sub_node.func.value.value, ast.Name) and sub_node.func.value.value.id == 'self':
+                        
+                        collection_name = sub_node.func.value.attr
+                        if node.name not in self.instance_var_collection_types:
+                            self.instance_var_collection_types[node.name] = {}
+                        self.instance_var_collection_types[node.name][collection_name] = inferred_type
+                        break
 
-                # Asumsi parameter pertama setelah 'self' adalah yang relevan untuk tipe
-                if body_item.args.args and len(body_item.args.args) > 1:
-                    param_node = body_item.args.args[1] # Node argumen (misalnya 'product')
-                    param_name_for_type_check = param_node.arg
+        self.generic_visit(node)
+        self.scope_stack.pop()
 
-                if param_name_for_type_check:
-                    # Cari 'isinstance(param_name_for_type_check, InferredType)'
-                    for stmt in body_item.body:
-                        # Mencari 'if not isinstance(product, Product):'
-                        if isinstance(stmt, ast.If) and \
-                           isinstance(stmt.test, ast.UnaryOp) and \
-                           isinstance(stmt.test.op, ast.Not) and \
-                           isinstance(stmt.test.operand, ast.Call) and \
-                           isinstance(stmt.test.operand.func, ast.Name) and \
-                           stmt.test.operand.func.id == 'isinstance' and \
-                           len(stmt.test.operand.args) == 2 and \
-                           isinstance(stmt.test.operand.args[0], ast.Name) and \
-                           stmt.test.operand.args[0].id == param_name_for_type_check and \
-                           isinstance(stmt.test.operand.args[1], ast.Name):
-                            param_type_inferred = stmt.test.operand.args[1].id
-                            break # Ditemukan tipe parameter
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        parent_scope = self.get_current_scope()
+        current_scope_name = f"{parent_scope}.{node.name}" if parent_scope and '.' not in parent_scope else node.name
+        self.scope_stack.append(current_scope_name)
 
-                if param_name_for_type_check and param_type_inferred:
-                    # Cari 'self.collection_name.append(param_name_for_type_check)'
-                    for sub_stmt_node in ast.walk(body_item):
-                        if isinstance(sub_stmt_node, ast.Call) and \
-                           isinstance(sub_stmt_node.func, ast.Attribute) and \
-                           isinstance(sub_stmt_node.func.value, ast.Attribute) and \
-                           isinstance(sub_stmt_node.func.value.value, ast.Name) and \
-                           sub_stmt_node.func.value.value.id == 'self' and \
-                           sub_stmt_node.func.attr == 'append' and \
-                           len(sub_stmt_node.args) == 1 and \
-                           isinstance(sub_stmt_node.args[0], ast.Name) and \
-                           sub_stmt_node.args[0].id == param_name_for_type_check:
-                            collection_name_appended_to = sub_stmt_node.func.value.attr
-                            if self.current_class_name not in self.instance_var_collection_types:
-                                self.instance_var_collection_types[self.current_class_name] = {}
-                            self.instance_var_collection_types[self.current_class_name][collection_name_appended_to] = param_type_inferred
-                            break # Ditemukan append ke koleksi self
+        original_var_types = self.current_method_var_types.copy()
+        self.current_method_var_types.clear()
+        
+        # --- PERBAIKAN: Inferensi tipe untuk parameter metode ---
+        # Mencari `isinstance(param, Type)` di dalam body metode
+        for param in node.args.args:
+            param_name = param.arg
+            if param_name == 'self': continue
+            for stmt in node.body:
+                 if isinstance(stmt, ast.If) and isinstance(stmt.test, (ast.UnaryOp, ast.Call)):
+                    call_node = stmt.test.operand if isinstance(stmt.test, ast.UnaryOp) else stmt.test
+                    if isinstance(call_node, ast.Call) and isinstance(call_node.func, ast.Name) and \
+                       call_node.func.id == 'isinstance' and len(call_node.args) == 2 and \
+                       isinstance(call_node.args[0], ast.Name) and call_node.args[0].id == param_name and \
+                       isinstance(call_node.args[1], ast.Name):
+                        inferred_type = call_node.args[1].id
+                        self.current_method_var_types[param_name] = inferred_type
+                        break
+        # --- Akhir Perbaikan ---
 
-        # Kunjungi metode aktual di dalam kelas
-        for body_item in node.body:
-            if isinstance(body_item, ast.FunctionDef):
-                self.visit(body_item) # Ini akan memanggil visit_FunctionDef
+        current_class = self.get_current_class_scope()
+        if current_class:
+            for stmt_node in node.body:
+                if isinstance(stmt_node, ast.For) and isinstance(stmt_node.target, ast.Name) and \
+                   isinstance(stmt_node.iter, ast.Attribute) and isinstance(stmt_node.iter.value, ast.Name) and \
+                   stmt_node.iter.value.id == 'self':
+                    
+                    loop_var_name = stmt_node.target.id
+                    collection_name = stmt_node.iter.attr
+                    if current_class in self.instance_var_collection_types and \
+                       collection_name in self.instance_var_collection_types[current_class]:
+                        item_type = self.instance_var_collection_types[current_class][collection_name]
+                        self.current_method_var_types[loop_var_name] = item_type
 
-        self.current_class_name = original_class_name
+        self.generic_visit(node)
+        self.scope_stack.pop()
+        self.current_method_var_types = original_var_types
 
-    def visit_FunctionDef(self, node):
-        if not self.current_class_name: # Bukan metode kelas
+    def visit_Call(self, node: ast.Call):
+        caller = self.get_current_scope()
+        if not caller:
             self.generic_visit(node)
             return
 
-        original_method_name = self.current_method_name
-        original_scope_vars = self.method_scope_var_types.copy()
-
-        self.current_method_name = node.name
-        self.method_scope_var_types.clear()
-
-        # Inferensikan tipe untuk parameter berdasarkan pengecekan isinstance
-        for stmt_node in node.body:
-            # Mencari 'if not isinstance(var, Type):' atau 'if isinstance(var, Type):'
-            is_isinstance_check = False
-            is_negated = False
-            
-            if isinstance(stmt_node, ast.If):
-                test_node = stmt_node.test
-                if isinstance(test_node, ast.UnaryOp) and isinstance(test_node.op, ast.Not):
-                    if isinstance(test_node.operand, ast.Call):
-                        is_isinstance_check = True
-                        is_negated = True
-                        call_node = test_node.operand
-                elif isinstance(test_node, ast.Call):
-                    is_isinstance_check = True
-                    call_node = test_node
-
-                if is_isinstance_check and \
-                   isinstance(call_node.func, ast.Name) and call_node.func.id == 'isinstance' and \
-                   len(call_node.args) == 2 and \
-                   isinstance(call_node.args[0], ast.Name) and \
-                   isinstance(call_node.args[1], ast.Name):
-                    var_name_checked = call_node.args[0].id
-                    type_name_checked = call_node.args[1].id
-                    self.method_scope_var_types[var_name_checked] = type_name_checked
+        callee_full_name = None
         
-        # Inferensikan tipe untuk variabel loop seperti 'for item in self.items:'
-        for stmt_node in node.body:
-            if isinstance(stmt_node, ast.For):
-                if isinstance(stmt_node.target, ast.Name) and \
-                   isinstance(stmt_node.iter, ast.Attribute) and \
-                   isinstance(stmt_node.iter.value, ast.Name) and \
-                   stmt_node.iter.value.id == 'self':
-                    loop_var_name = stmt_node.target.id
-                    collection_name = stmt_node.iter.attr
-                    
-                    if self.current_class_name in self.instance_var_collection_types and \
-                       collection_name in self.instance_var_collection_types[self.current_class_name]:
-                        item_type = self.instance_var_collection_types[self.current_class_name][collection_name]
-                        self.method_scope_var_types[loop_var_name] = item_type
-        
-        self.generic_visit(node) # Kunjungi body dari metode
-        
-        self.current_method_name = original_method_name
-        self.method_scope_var_types = original_scope_vars
+        # Kasus 1: Pemanggilan pada 'self' -> self.method()
+        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == 'self':
+            class_name = self.get_current_class_scope()
+            if class_name:
+                callee_full_name = f"{class_name}.{node.func.attr}"
 
+        # Kasus 2: Pemanggilan pada variabel lain -> product.get_name()
+        elif isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+            var_name = node.func.value.id
+            if var_name in self.current_method_var_types:
+                inferred_class_type = self.current_method_var_types[var_name]
+                method_called = node.func.attr
+                callee_full_name = f"{inferred_class_type}.{method_called}"
 
-    def visit_Call(self, node):
-        # Mencari pemanggilan seperti `variabel.metode()`
-        if self.current_class_name and self.current_method_name and \
-           isinstance(node.func, ast.Attribute) and \
-           isinstance(node.func.value, ast.Name): # objek adalah nama variabel sederhana
-            
-            obj_name = node.func.value.id # contoh: 'item' atau 'product'
-            method_called = node.func.attr # contoh: 'get_price' atau 'get_name'
+        # Kasus 3: Pemanggilan fungsi standalone -> my_function()
+        elif isinstance(node.func, ast.Name):
+            # Abaikan fungsi built-in yang umum
+            if node.func.id not in BUILTIN_FUNCTIONS_TO_IGNORE:
+                callee_full_name = node.func.id
 
-            callee_class_type = None
-            if obj_name in self.method_scope_var_types:
-                callee_class_type = self.method_scope_var_types[obj_name]
-            
-            if callee_class_type:
-                # Pastikan pemanggil dan target berbeda, atau setidaknya kelas target diketahui
-                # (Untuk menghindari self.method -> self_class.method jika tidak diinginkan)
-                # Untuk kasus ini, kita ingin melihat Product.get_price, jadi callee_class_type harus 'Product'
-                
-                call_str = f"{self.current_class_name}.{self.current_method_name} -> {callee_class_type}.{method_called}"
-                if call_str not in self.calls: # Hindari duplikat jika metode dipanggil berkali-kali
-                    self.calls.append(call_str)
-        
+        if callee_full_name:
+            self.calls.add(f"{caller} -> {callee_full_name}")
+
         self.generic_visit(node)
 
-
-def extract_call_graph_from_code(python_code):
-    """
-    Menganalisis string kode Python dan mengekstrak call graph antar metode kelas.
-    """
+def extract_call_graph_from_code(python_code: str) -> dict:
+    """Menganalisis kode dan mengekstrak call graph."""
     try:
         tree = ast.parse(python_code)
         visitor = CallGraphVisitor()
         visitor.visit(tree)
-        return {"call_graph": sorted(list(set(visitor.calls)))} # Urutkan dan pastikan unik
-    except SyntaxError as e:
-        return {"error": f"Syntax error in Python code: {e.msg} on line {e.lineno}"}
+        return {"call_graph": sorted(list(visitor.calls))}
     except Exception as e:
-        # Tangkap error lain yang mungkin terjadi selama pemrosesan AST
-        # Sebaiknya log error ini di sisi server untuk debugging
-        # print(f"Error processing code for call graph: {e}") 
+        print(f"Error processing code for call graph: {e}")
         return {"error": f"An error occurred while processing the code: {str(e)}"}
 
-
 @call_graph_bp.route('/call_graph', methods=['POST'])
-def generate_call_graph(): # Mengganti nama fungsi handler
-    """
-    Endpoint untuk menerima kode Python dan mengembalikan call graph antar metode kelas.
-    """
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-
+def generate_call_graph():
+    """Endpoint untuk call graph."""
     data = request.get_json()
     python_code = data.get('code')
-
-    if not python_code:
-        return jsonify({"error": "Missing 'code' field in JSON body"}), 400
-
-    if not isinstance(python_code, str):
-        return jsonify({"error": "'code' field must be a string"}), 400
-
-    # Ekstrak call graph menggunakan fungsi yang telah dibuat
+    if not python_code: return jsonify({"error": "Missing 'code'"}), 400
     result = extract_call_graph_from_code(python_code)
-    
-    if "error" in result:
-        # Tentukan apakah ini kesalahan klien (400) atau server (500)
-        status_code = 400 if "Syntax error" in result["error"] else 500
-        return jsonify(result), status_code
-    
+    if "error" in result: return jsonify(result), 400
     return jsonify(result), 200

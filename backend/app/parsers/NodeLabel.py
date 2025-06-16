@@ -12,6 +12,9 @@ class NodeLabel:
         attrs = AttributeParser.parse(attr_str)
         self.fontname = attrs.get("fontname", "DejaVu Sans Mono")
         self.label = attrs.get("label", None)
+        # saya ingin mengganti pada label " menjadi '
+        if self.label is not None:
+            self.label = self.label.replace('"', "'")
 
     def __str__(self):
         return f"NodeLabel(fontname={self.fontname}, label={self.label}, color={self.color})"

@@ -13,30 +13,10 @@ import {
   SVG_NODE_EXTRA_WIDTH_PADDING,
   SVG_NODE_EXTRA_HEIGHT_PADDING,
 } from '@/constants/flowConstants';
-import { ParsedFlowResult, CustomNode, MethodNodeInfo, BackendClassItem, BackendMethodObject, BackendClassResultType, BackendFunctionResultType, BackendMainResultType, BackendFunctionItem } from '@/types';
+import { getSvgDimensions } from '@/lib/svgDimension';
+import { ParsedFlowResult, CustomNode, MethodNodeInfo, BackendClassItem, BackendMethodObject, BackendClassResultType, BackendFunctionResultType, BackendFunctionItem } from '@/types';
 
-
-const getSvgDimensions = (svgContent: string): { width: number; height: number } => {
-    let width = DEFAULT_SVG_WIDTH_PX;
-    const svgWidthMatch = svgContent.match(/width="(\d+(\.\d+)?)pt/);
-    if (svgWidthMatch?.[1]) {
-        width = Math.ceil(parseFloat(svgWidthMatch[1]) * PT_TO_PX_FACTOR);
-    }
-    
-    let height = DEFAULT_SVG_HEIGHT_PX;
-    const svgHeightMatch = svgContent.match(/height="(\d+(\.\d+)?)pt/);
-    if (svgHeightMatch?.[1]) {
-        height = Math.ceil(parseFloat(svgHeightMatch[1]) * PT_TO_PX_FACTOR);
-    }
-    return { width, height };
-};
-
-/**
- * Mem-parsing hasil dari backend menjadi format yang bisa digunakan oleh React Flow.
- * @param result - Array data kelas dan metode dari backend.
- * @returns Objek yang berisi array nodes dan edges untuk React Flow.
- */
-export function parseBackendResultToFlow(classResult: BackendClassResultType, functionResult: BackendFunctionResultType, mainResult: string): ParsedFlowResult {
+export function parseCFG(classResult: BackendClassResultType, functionResult: BackendFunctionResultType, mainResult: string): ParsedFlowResult {
   const nodesArray: CustomNode[] = [];
   const edgesArray: any[] = [];
   let currentYPosition = 50; 

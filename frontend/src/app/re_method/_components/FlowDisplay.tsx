@@ -89,6 +89,8 @@ const FlowDisplay: React.FC<FlowDisplayProps> = ({
   return (
     <div className="flex-1 min-w-0 relative bg-graph-paper" ref={reactFlowWrapperRef}>
       <ReactFlow
+        minZoom={0.2}
+        maxZoom={4}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}

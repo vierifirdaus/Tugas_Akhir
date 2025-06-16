@@ -25,12 +25,21 @@ export interface BackendClassItem {
   [className: string]: BackendMethodObject[];
 }
 
+export interface BackendFunctionItem {
+  [functionName: string]: string; // svgContent
+}
+
 export interface BackendMethodObject {
   [methodName: string]: string; // svgContent
 }
 
-export type BackendResultType = BackendClassItem[];
+export interface BackendMainItem {
+  mainCode: string; // Hasil dari fungsi main
+}
 
+export type BackendClassResultType = BackendClassItem[];
+export type BackendFunctionResultType = BackendFunctionItem[];
+export type BackendMainResultType = BackendMainItem;
 // Tipe untuk hasil parsing dari backend ke format React Flow
 export interface ParsedFlowResult {
   nodes: CustomNode[];
@@ -45,7 +54,9 @@ export interface VisualizeCodePayload {
 
 // Tipe untuk response dari API (sesuaikan dengan struktur API Anda)
 export interface VisualizeCodeResponse {
-  result: BackendResultType;
+  class: BackendClassResultType;
+  function: BackendFunctionResultType;
+  mainCode: string;
   // error?: string; // Opsional, untuk error dari backend
 }
 

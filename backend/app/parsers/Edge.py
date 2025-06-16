@@ -30,6 +30,8 @@ class Edge:
             self.style = attrs.get("style")
             self.color = attrs.get("color")
             self.label = attrs.get("label")
+            if self.label is not None:
+                self.label = self.label.replace('"', "'")
             self.lp = attrs.get("lp")
 
     def __str__(self):

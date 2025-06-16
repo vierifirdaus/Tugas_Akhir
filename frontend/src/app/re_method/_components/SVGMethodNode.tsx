@@ -37,7 +37,7 @@ const SVGMethodNode: React.FC<NodeProps> = ({ data, selected, type, id }) => {
   return (
     <div
       className={`bg-white rounded-md border p-1.5 flex flex-col shadow-sm box-border
-                  ${selected ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-300'}`}
+                  border-blue-300 ring-2 ring-blue-500`}
       style={{
         width: componentWidth,
         height: componentHeight,
@@ -54,7 +54,7 @@ const SVGMethodNode: React.FC<NodeProps> = ({ data, selected, type, id }) => {
       />
       {/* Label Metode */}
       <div
-        className="mt-1 text-center font-medium text-xs py-1 px-0.5 bg-slate-100 rounded w-full text-slate-700 truncate"
+        className="mt-1 text-center font-medium text-xs py-1 px-0.5 bg-blue-300 rounded w-full truncate"
         title={String(data.label)} // Tooltip untuk teks panjang
       >
         {String(data.label)}

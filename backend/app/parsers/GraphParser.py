@@ -9,8 +9,6 @@ from .EdgeLabel import EdgeLabel
 
 class GraphParser:
     def __init__(self, input_str, parent=None, types=None):
-        if(parent is None):
-            print("input std ",input_str)
         self.name = None
         self.graph = None
         self.nodeLabel = None
@@ -88,17 +86,13 @@ class GraphParser:
             if self.name in self.typeCode['function']:
                 self.type = 'function'
                 return
-
-
         if self.subGraph:
             if getattr(self.parent, 'parent', None) == None:
                 self.type = 'class'
                 return
-
         if getattr(getattr(self.parent, 'parent', None), 'parent', None) == None and getattr(self.parent, 'name', None) != 'main':
             self.type = 'method'
             return
-
         self.type = None
 
     def print(self, indent=0):
@@ -146,7 +140,7 @@ class GraphParser:
         res = []
         for subgraph in self.subGraph:
             if subgraph.type == "function":
-                # print("Function name:", subgraph.graphViz())
+                print("Function name:", subgraph.graphViz())
                 svg_str = graphviz.Source(subgraph.graphViz(), format='svg').pipe().decode('utf-8')
                 res.append({subgraph.name: svg_str})
             res += subgraph.collectionFunction()
@@ -158,6 +152,7 @@ class GraphParser:
             is_digraph = False
             if "cfg" in self.name:
                 is_digraph = True
+                self.name = "MainCode"
             if self.parent is None:
                 is_digraph = True 
             if indent == 0:

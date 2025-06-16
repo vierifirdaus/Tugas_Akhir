@@ -12,6 +12,8 @@ class EdgeLabel:
         attrs = AttributeParser.parse(attr_str)
         self.fontname = attrs.get("fontname", "DejaVu Sans Mono")
         self.label = attrs.get("label", None)
+        if self.label is not None:
+            self.label = self.label.replace('"', "'")
         self.color = attrs.get("color", None)
 
     def __str__(self):

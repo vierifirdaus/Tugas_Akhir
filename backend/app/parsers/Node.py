@@ -36,6 +36,7 @@ class Node:
         # Only set label if not already set from the special handling
         if self.label is None:
             self.label = attrs.get("label")
+            self.label = self.label.replace('"', "'")
         self.pos = attrs.get("pos")
         self.shape = attrs.get("shape")
         self.style = attrs.get("style")

@@ -37,6 +37,10 @@ class Graph:
         self.style = attrs.get("style")
         self.shape = attrs.get("shape")
 
+        if(self.label[0:3] == 'cfg') : 
+            self.label = 'Main'
+        if self.label is not None:
+            self.label = self.label.replace('"', "'")
 
     def __str__(self):
         return f"Graph(bb={self.bb}, compound={self.compound}, fontname={self.fontname}, label={self.label}, lheight={self.lheight}, lp={self.lp}, lwidth={self.lwidth}, pack={self.pack}, rankdir={self.rankdir}, ranksep={self.ranksep}, color={self.color}, style={self.style}, shape={self.shape})"
