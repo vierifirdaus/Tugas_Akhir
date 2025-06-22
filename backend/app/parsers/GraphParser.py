@@ -36,17 +36,18 @@ class GraphParser:
             return
 
         content = input_str[start:end].strip()
-        blocks = regex.findall(
-            r'(?:[A-Za-z0-9_]+\s*\[.*?\];)|'
-            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[.*?\])|'
-            r'(?:graph\s*\[.*?\])|'
-            r'(?:node\s*\[.*?\])|'
-            r'(?:edge\s*\[.*?\])|'
-            r'(?:subgraph\s+\w+\s*{(?:(?R)|[^{}])*})|'
-            r'(?:digraph\s+\w+\s*{(?:(?R)|[^{}])*})',
-            content,
-            regex.DOTALL
-        )
+        patterns = [
+            r'(?:[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\];)',  # Nodes (tanpa | di akhir)
+            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\](?:\s*;)?)', # Edges
+            r'(?:graph\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', # Graph attributes
+            r'(?:node\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', # Node attributes
+            r'(?:edge\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', # Edge attributes
+            r'(?:subgraph\s+\w+\s*{(?:(?R)|[^{}])*})', # Subgraphs (rekursif)
+            r'(?:digraph\s+\w+\s*{(?:(?R)|[^{}])*})' # Digraphs (rekursif)
+        ]
+
+        full_pattern = '|'.join(patterns)
+        blocks = regex.findall(full_pattern, content, regex.DOTALL)
         for block in blocks:
             block = block.strip()
             if block.startswith("graph"):
@@ -124,7 +125,6 @@ class GraphParser:
     def collectionMethod(self):
         res = []
         className = []
-        print("typeCode :", self.typeCode)
         for classItem in self.typeCode['class'] : 
             className.append(classItem['classname'])
         classMethod = {}
