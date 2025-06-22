@@ -59,7 +59,6 @@ def method():
 
             dot_content = generate_cfg(code, base_filename, public_dir)
             types = parse_code(code)
-            print("typess :", types)
             parser = GraphParser.GraphParser(dot_content, types=types)
             collection_method = parser.collectionMethod()
             collection_function = parser.collectionFunction()

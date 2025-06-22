@@ -50,6 +50,12 @@ class GraphParser:
         blocks = regex.findall(full_pattern, content, regex.DOTALL)
         for block in blocks:
             block = block.strip()
+
+            space_split = block.split(" ")
+            edge_check = False
+            if len(space_split) > 1 :
+                if space_split[1] == "->":
+                    edge_check = True
             if block.startswith("graph"):
                 self.graph = Graph(block)
             elif block.startswith("node"):
@@ -61,12 +67,13 @@ class GraphParser:
                 if sub_parser.name == "KEY":
                     continue
                 self.subGraph.append(sub_parser)
-            elif "->" in block:
+            elif edge_check:
                 try:
                     self.edge.append(Edge(block))
                 except Exception as e:
                     print(f"Failed to parse edge: {e}")
-            elif regex.match(r'^[A-Za-z0-9_]+\s*\[.*\];$', block, regex.DOTALL):
+                    print("block edge:", block)
+            elif regex.match(r'(?:[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\];)', block, regex.DOTALL):
                 try:
                     self.node.append(Node(block))
                 except Exception as e:

@@ -11,28 +11,35 @@ class Edge:
         self.color = None
         self.label = None
         self.lp = None
-
+        self.direction = "->"  
         processed_str = ' '.join(input_str.strip().split())
 
-        edge_pattern = r'^\s*([a-zA-Z_]\w*|\d+)\s*(->|--)\s*([a-zA-Z_]\w*|\d+)(?:\s*\[(.*?)\])?\s*;?\s*$'
+        edge_pattern = r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\](?:\s*;)?)' # Edges
         match = re.match(edge_pattern, processed_str, re.DOTALL)
         
         if not match:
             raise ValueError(f"Invalid edge string: {input_str}")
-                
-        self.source = match.group(1)
-        self.direction = match.group(2)  # Store the direction
-        self.target = match.group(3)
+        space_split = processed_str.split(" ") 
+        self.source = space_split[0]  # The source node
+        self.target = space_split[2]  # The target node
 
-        if match.group(4):
-            attrs = AttributeParser.parse(match.group(4))
-            self.pos = attrs.get("pos")
-            self.style = attrs.get("style")
-            self.color = attrs.get("color")
-            self.label = attrs.get("label")
-            if self.label is not None:
+        attrs = AttributeParser.parse(processed_str)
+        self.pos = attrs.get("pos")
+        self.style = attrs.get("style")
+        self.color = attrs.get("color")
+        self.label = attrs.get("label")
+        if self.label is not None:
+            temp_label = ""
+            if isinstance(self.label, list):
+                for i in self.label :
+                    if i == "\l":
+                        temp_label += "\\l"
+                    else:
+                        temp_label += i 
+                self.label = temp_label.replace('"', "'")
+            else : 
                 self.label = self.label.replace('"', "'")
-            self.lp = attrs.get("lp")
+        self.lp = attrs.get("lp")
 
     def __str__(self):
         return f"Edge(source={self.source}, target={self.target}, pos={self.pos}, style={self.style}, color={self.color}, label={self.label}, lp={self.lp})"
