@@ -1,13 +1,15 @@
 from flask import Blueprint, request, jsonify
 import ast
-import os # Sesuai template Anda
+import os
 
-# current_directory = os.getcwd() # Sesuai template Anda, tidak digunakan di logika ini
 pdg_bp = Blueprint('pdg', __name__)
 
 class PDGVisitor(ast.NodeVisitor):
+    MUTATING_LIST_METHODS = {
+        'append', 'extend', 'insert', 'remove', 'pop', 'clear', 'sort', 'reverse'
+    }
+
     def __init__(self):
-        # Struktur data: {"ClassName": ["method1 -> attrA", "method2 -> attrB"], ...}
         self.pdg_data = {}
         self.current_class_name = None
         self.current_method_name = None
@@ -17,46 +19,55 @@ class PDGVisitor(ast.NodeVisitor):
         self.current_class_name = node.name
         if self.current_class_name not in self.pdg_data:
             self.pdg_data[self.current_class_name] = []
-        
-        # Kunjungi semua node di dalam body kelas (termasuk metode, dll.)
         self.generic_visit(node)
-        
-        self.current_class_name = original_class_name # Kembalikan konteks kelas sebelumnya
+        self.current_class_name = original_class_name
 
     def visit_FunctionDef(self, node):
-        # Hanya proses jika kita berada di dalam konteks kelas (yaitu, ini adalah metode)
         if self.current_class_name:
             original_method_name = self.current_method_name
             self.current_method_name = node.name
-            
-            # Kunjungi body dari metode
             self.generic_visit(node)
-            
-            self.current_method_name = original_method_name # Kembalikan konteks metode sebelumnya
+            self.current_method_name = original_method_name
         else:
-            # Jika ini fungsi di luar kelas, kita bisa memilih untuk mengabaikannya atau memprosesnya secara berbeda
-            # Untuk PDG ini, kita fokus pada metode kelas
             self.generic_visit(node)
 
+    def _record_dependency(self, target_node):
+        """Helper untuk mencatat dependensi saat atribut 'self' dimodifikasi."""
+        if self.current_class_name and self.current_method_name:
+            if isinstance(target_node, ast.Attribute):
+                if isinstance(target_node.value, ast.Name) and target_node.value.id == 'self':
+                    attribute_name = target_node.attr
+                    dependency_str = f"{self.current_method_name} -> {attribute_name}"
+                    if dependency_str not in self.pdg_data[self.current_class_name]:
+                        self.pdg_data[self.current_class_name].append(dependency_str)
 
     def visit_Assign(self, node):
-        # Pastikan kita berada di dalam metode sebuah kelas
-        if self.current_class_name and self.current_method_name:
-            for target in node.targets:
-                # Cari assignment ke atribut instance (misalnya, self.attribute = value)
-                if isinstance(target, ast.Attribute):
-                    # Pastikan basis dari atribut adalah 'self'
-                    if isinstance(target.value, ast.Name) and target.value.id == 'self':
-                        attribute_name = target.attr
-                        dependency_str = f"{self.current_method_name} -> {attribute_name}"
-                        
-                        # Tambahkan dependensi jika belum ada (untuk menghindari duplikat string yang sama)
-                        if dependency_str not in self.pdg_data[self.current_class_name]:
-                            self.pdg_data[self.current_class_name].append(dependency_str)
+        for target in node.targets:
+            self._record_dependency(target)
+        self.generic_visit(node)
+
+    def visit_AugAssign(self, node):
+        self._record_dependency(node.target)
+        self.generic_visit(node)
+
+    # --- PERBAIKAN BARU ADA DI SINI ---
+    def visit_Call(self, node):
+        """
+        Mendeteksi modifikasi atribut melalui pemanggilan metode, 
+        contoh: self.items.append(product)
+        """
+        # `node.func` adalah fungsi yang dipanggil.
+        # Kita cari pola: self.attribute.method()
+        # Ini berarti `node.func` harus berupa `ast.Attribute` (e.g., '... .append')
+        if isinstance(node.func, ast.Attribute):
+            # Cek apakah nama metodenya ada di dalam daftar metode mutasi kita
+            method_name = node.func.attr
+            if method_name in self.MUTATING_LIST_METHODS:
+                # `node.func.value` adalah objek tempat metode dipanggil (e.g., 'self.items')
+                # Kita bisa teruskan ini ke helper kita untuk memeriksa apakah itu `self.attribute`
+                self._record_dependency(node.func.value)
         
-        # Penting untuk tetap mengunjungi node anak dari assignment, 
-        # karena value yang di-assign bisa jadi memiliki struktur yang kompleks.
-        # Namun, untuk PDG spesifik "metode mengubah atribut", kita hanya tertarik pada target.
+        # Selalu panggil generic_visit untuk memastikan kita mengunjungi semua node anak
         self.generic_visit(node)
 
 
@@ -68,20 +79,17 @@ def extract_pdg_from_code(python_code):
         tree = ast.parse(python_code)
         visitor = PDGVisitor()
         visitor.visit(tree)
-        # Mengurutkan dependensi di dalam setiap kelas untuk output yang konsisten (opsional)
         for class_name in visitor.pdg_data:
             visitor.pdg_data[class_name].sort()
         return visitor.pdg_data
     except SyntaxError as e:
         return {"error": f"Syntax error in Python code: {e.msg} on line {e.lineno}"}
     except Exception as e:
-        # Untuk error lain selama pemrosesan AST
-        # print(f"Error processing code for PDG: {e}") # Untuk debugging di server
         return {"error": f"An error occurred while processing the code: {str(e)}"}
 
 
 @pdg_bp.route('/pdg', methods=['POST'])
-def generate_pdg(): # Mengganti nama fungsi handler agar lebih deskriptif
+def generate_pdg():
     """
     Endpoint untuk menerima kode Python dan mengembalikan PDG
     (metode mana yang memodifikasi atribut instance).
@@ -98,11 +106,9 @@ def generate_pdg(): # Mengganti nama fungsi handler agar lebih deskriptif
     if not isinstance(python_code, str):
         return jsonify({"error": "'code' field must be a string"}), 400
 
-    # Ekstrak PDG menggunakan fungsi yang telah dibuat
     result = extract_pdg_from_code(python_code)
     
     if "error" in result:
-        # Tentukan status code berdasarkan jenis error
         status_code = 400 if "Syntax error" in result["error"] else 500
         return jsonify(result), status_code
     

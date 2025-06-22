@@ -1,28 +1,27 @@
 from flask import Blueprint, request, jsonify
-import uuid, os, graphviz
+import uuid
+import os
+import graphviz
 from py2cfg import CFGBuilder
 from ..parsers import GraphParser
+import ast
 
-current_directory = os.getcwd()
 method_bp = Blueprint('method', __name__)
 
-import ast
 def parse_code(code):
+    """Parse Python code and extract class, function, and main code information."""
     tree = ast.parse(code)
     result = {'class': [], 'function': [], 'main': ''}
-
     main_code = []
+
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
             result['function'].append(node.name)
         elif isinstance(node, ast.ClassDef):
             class_data = {
                 'classname': node.name,
-                'method': []
+                'method': [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
             }
-            for class_node in node.body:
-                if isinstance(class_node, ast.FunctionDef):
-                    class_data['method'].append(class_node.name)
             result['class'].append(class_data)
         else:
             main_code.append(ast.unparse(node))
@@ -30,6 +29,15 @@ def parse_code(code):
     result['main'] = "\n".join(main_code)
     return result
 
+def generate_cfg(code, base_filename, output_dir):
+    cfg_builder = CFGBuilder()
+    cfg = cfg_builder.build_from_src(base_filename, code)
+    output_path = os.path.join(output_dir, base_filename)
+    cfg.build_visual(output_path, 'dot', show=False)
+    
+    dot_file = output_path + '.dot'
+    with open(dot_file, 'r', encoding='utf-8') as f:
+        return f.read()
 
 @method_bp.route('/method', methods=['POST'])
 def method():
@@ -40,57 +48,53 @@ def method():
         if not code:
             return jsonify({'error': 'No code provided'}), 400
         
-        unique_id_code = uuid.uuid4().hex
-        base_filename_code = f'cfg_{unique_id_code}'
-        output_path_code = os.path.join(current_directory, "backend", "public", base_filename_code)
-        
-        unique_id_main = uuid.uuid4().hex
-        base_filename_main = f'cfg_{unique_id_main}'
-        output_path_main = os.path.join(current_directory, "backend", "public", base_filename_main)
+        public_dir = os.path.join(os.getcwd(), "backend", "public")
+        files_to_delete = []
 
         try:
-            cfg_builder = CFGBuilder()
-            cfg = cfg_builder.build_from_src(base_filename_code, code)
-            
-            cfg.build_visual(output_path_code, 'dot', show=False)
-            dot_file = output_path_code + '.dot'
-            with open(dot_file, 'r', encoding='utf-8') as f:
-                dot_content_code = f.read()
+            unique_id = uuid.uuid4().hex
+            base_filename = f'cfg_{unique_id}'
+            dot_file_path = os.path.join(public_dir, base_filename + '.dot')
+            files_to_delete.append(dot_file_path)
+
+            dot_content = generate_cfg(code, base_filename, public_dir)
             types = parse_code(code)
-            parser = GraphParser.GraphParser(dot_content_code,types=types)
+            print("typess :", types)
+            parser = GraphParser.GraphParser(dot_content, types=types)
+            collection_method = parser.collectionMethod()
+            collection_function = parser.collectionFunction()
+            collection_main = None
+            if types['main'].strip():
+                main_filename_base = f'cfg_{uuid.uuid4().hex}'
+                main_dot_path = os.path.join(public_dir, main_filename_base + '.dot')
+                files_to_delete.append(main_dot_path)
 
-            print("check parsing result")
-            # parser.print()
-
-            collectionMethod = parser.collectionMethod()
-            collectionFunction = parser.collectionFunction()
-            # collectionFunction = []
-            collectionMain = None
-            mainCode = types['main']
-            if mainCode != '':
-                cfg_builder_main = CFGBuilder()
-                cfg_main = cfg_builder_main.build_from_src(base_filename_main, mainCode)
-                
-                cfg_main.build_visual(output_path_main, 'dot', show=False)
-                dot_file_main = output_path_main + '.dot'
-                with open(dot_file_main, 'r', encoding='utf-8') as f:
-                    dot_content_main = f.read()
-                parserMain = GraphParser.GraphParser(dot_content_main,types=None)
-                parserMain = parserMain.graphViz()
-                print("parserMain", parserMain)
-                collectionMain = graphviz.Source(parserMain, format='svg').pipe().decode('utf-8')
+                main_dot = generate_cfg(types['main'], main_filename_base, public_dir)
+                parser_main = GraphParser.GraphParser(main_dot, types=None)
+                collection_main = graphviz.Source(parser_main.graphViz(), format='svg').pipe().decode('utf-8')
 
             return jsonify({
-                'class': collectionMethod,
-                'function': collectionFunction,
-                'mainCode': collectionMain,
+                'class': collection_method,
+                'function': collection_function,
+                'mainCode': collection_main,
             })
             
         except Exception as e:
             return jsonify({
-                'error': f'Failed to process code: {str(e)}',
-                'details': 'The code might contain syntax that cannot be visualized'
+                'error': 'Failed to process code',
+                'details': str(e)
             }), 400
+            
+        finally:
+            # print("oke")
+            for file_path in files_to_delete:
+                try:
+                    if os.path.exists(file_path):
+                        # os.remove(file_path)
+                        print(f"Successfully deleted file: {file_path}") # Optional: untuk logging
+                except Exception as e:
+                    # Sebaiknya log error ini daripada membiarkannya crash
+                    print(f"Error deleting file {file_path}: {e}")
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -9,8 +9,7 @@ import {
   SVG_NODE_EXTRA_HEIGHT_PADDING
 } from '@/constants/flowConstants';
 
-// Props untuk SVGMethodNode, menggunakan NodeProps dari @xyflow/react
-const SVGMethodNode: React.FC<NodeProps> = ({ data, selected, type, id }) => {
+const SVGMethodNode: React.FC<NodeProps> = ({ data }) => {
   const svgWidthMatch = typeof data.svg === 'string' ? data.svg.match(/width="(\d+(\.\d+)?)pt/) : null;
   const svgHeightMatch = typeof data.svg === 'string' ? data.svg.match(/height="(\d+(\.\d+)?)pt/) : null;
 
@@ -30,40 +29,55 @@ const SVGMethodNode: React.FC<NodeProps> = ({ data, selected, type, id }) => {
     }
   }
 
-  // Dimensi keseluruhan komponen node
-  const componentWidth = originalSvgWidth + SVG_NODE_EXTRA_WIDTH_PADDING;
-  const componentHeight = originalSvgHeight + SVG_NODE_EXTRA_HEIGHT_PADDING;
+  let componentWidth = originalSvgWidth + SVG_NODE_EXTRA_WIDTH_PADDING;
+  let componentHeight = originalSvgHeight + SVG_NODE_EXTRA_HEIGHT_PADDING;
+
+  if(data.category === 'attribute') {
+    componentHeight = 50; // Fixed height for attribute nodes
+    componentWidth = Math.max(componentWidth, 150); // Ensure minimum width for attribute nodes
+  }
+
+  // Determine colors based on category
+  const borderColor = data.category === 'attribute' ? 'border-orange-300' : 'border-blue-300';
+  const ringColor = data.category === 'attribute' ? 'ring-orange-500' : 'ring-blue-500';
+  const labelBgColor = data.category === 'attribute' ? 'bg-orange-300' : 'bg-blue-300';
 
   return (
     <div
       className={`bg-white rounded-md border p-1.5 flex flex-col shadow-sm box-border
-                  border-blue-300 ring-2 ring-blue-500`}
+                  ${borderColor} ${ringColor} ring-2`}
       style={{
         width: componentWidth,
         height: componentHeight,
       }}
     >
-      {/* Kontainer untuk SVG */}
-      <div
-        dangerouslySetInnerHTML={{ __html: data.svg || "" }}
-        className="overflow-visible" // Sesuai style asli
-        style={{
-          width: originalSvgWidth,
-          height: originalSvgHeight,
-        }}
+      {/* SVG Container */}
+      {
+        data.category != 'attribute' &&
+        (
+        <div      
+          dangerouslySetInnerHTML={{ __html: data.svg || "" }}
+          className="overflow-visible"
+          style={{
+            width: originalSvgWidth,
+            height: originalSvgHeight,
+          }}
       />
-      {/* Label Metode */}
+        )
+      }
+      
+      {/* Label */}
       <div
-        className="mt-1 text-center font-medium text-xs py-1 px-0.5 bg-blue-300 rounded w-full truncate"
-        title={String(data.label)} // Tooltip untuk teks panjang
+        className={`mt-1 text-center font-medium text-xs py-1 px-0.5 ${labelBgColor} rounded w-full truncate`}
+        title={String(data.label)}
       >
         {String(data.label)}
       </div>
-      {/* Handles untuk koneksi */}
-      <Handle type="source" position={Position.Bottom} id="out" className="!bg-slate-400 !w-3 !h-3" />
-      <Handle type="target" position={Position.Top} id="in" className="!bg-slate-400 !w-3 !h-3" />
+      {/* Handles for connections */}
+      <Handle type="source" position={Position.Top} id="out" className="!bg-slate-400 !w-3 !h-3" />
+      <Handle type="target" position={Position.Bottom} id="in" className="!bg-slate-400 !w-3 !h-3" />
     </div>
   );
 };
 
-export default React.memo(SVGMethodNode); // Gunakan React.memo untuk optimasi jika props tidak sering berubah
+export default React.memo(SVGMethodNode);

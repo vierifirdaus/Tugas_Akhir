@@ -20,6 +20,6 @@ export const PT_TO_PX_FACTOR = 4 / 3;
 // Padding tambahan pada komponen SVGMethodNode
 export const SVG_NODE_EXTRA_WIDTH_PADDING = 12; // 6 padding kiri + 6 padding kanan
 export const SVG_NODE_EXTRA_HEIGHT_PADDING = 40; // 6 padding atas + 6 padding bawah + tinggi label
-
+export const CLASS_SPACING_HORIZONTAL = 50;
 // URL API (sebaiknya gunakan environment variable)
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';

@@ -13,6 +13,6 @@ RUN mkdir -p ./public
 
 ENV FLASK_ENV=development
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["python", "run.py"]

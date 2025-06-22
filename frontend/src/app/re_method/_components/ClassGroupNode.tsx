@@ -1,7 +1,6 @@
 // src/app/method/_components/ClassGroupNode.tsx
 import React from "react";
-import { NodeProps, Handle, Position } from "@xyflow/react"; // React Flow V11+
-import { ClassGroupNodeData } from "@/types";
+import { NodeProps} from "@xyflow/react"; 
 import { CLASS_LABEL_HEADER_HEIGHT } from "@/constants/flowConstants";
 
 const categoryColorClasses = {
@@ -35,7 +34,7 @@ const categoryColorClasses = {
   },
 };
 
-const ClassGroupNode: React.FC<NodeProps> = ({ data, selected, id }) => {
+const ClassGroupNode: React.FC<NodeProps> = ({ data, selected}) => {
   const nodeWidth = typeof data?.width === "number" ? data.width : 300;
   const nodeHeight = typeof data?.height === "number" ? data.height : 150;
 

@@ -4,6 +4,8 @@
 import React, { useState, useCallback, useEffect, useRef, ChangeEvent } from 'react';
 import Editor, { Monaco, OnChange } from '@monaco-editor/react';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { editor } from 'monaco-editor';
+import { toast } from 'react-toastify';
 
 // Definisikan tipe untuk jenis graf yang dipilih
 export type SelectedGraphTypes = Record<string, boolean>;
@@ -113,9 +115,18 @@ const CodeInputPanel: React.FC<CodeInputPanelProps> = ({
 
   const handleSubmit = () => {
     // Pastikan setidaknya satu jenis graf dipilih
-    const कोईGraphTerpilih = Object.values(selectedGraphTypes).some(isSelected => isSelected);
-    if (!कोईGraphTerpilih) {
-        alert("Harap pilih setidaknya satu jenis graf.");
+    const GraphTerpilih = Object.values(selectedGraphTypes).some(isSelected => isSelected);
+    if (!GraphTerpilih) {
+        toast.error('Harap pilih setidaknya satu jenis graf!', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         return;
     }
     onVisualizeClick(pythonCode, selectedGraphTypes);
@@ -153,7 +164,7 @@ const CodeInputPanel: React.FC<CodeInputPanelProps> = ({
     tabSize: 2,
   };
 
-  function handleEditorDidMount(editor: any, monaco: Monaco) {
+  function handleEditorDidMount(editor:editor.IStandaloneCodeEditor, monaco: Monaco) {
     monacoInstanceRef.current = monaco;
   }
 

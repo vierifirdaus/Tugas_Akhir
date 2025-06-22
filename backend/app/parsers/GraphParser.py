@@ -123,12 +123,18 @@ class GraphParser:
     
     def collectionMethod(self):
         res = []
+        className = []
+        print("typeCode :", self.typeCode)
+        for classItem in self.typeCode['class'] : 
+            className.append(classItem['classname'])
+        classMethod = {}
+        for classItem in self.typeCode['class'] :
+            classMethod[classItem['classname']] = classItem['method']
         for subgraph in self.subGraph:
-            # print(f"class name: {subgraph.name} (type: {subgraph.type})")
-            if subgraph.type == "class":
+            if subgraph.name in className:
                 method_arr = []
                 for method in subgraph.subGraph:
-                    if method.type == "method":
+                    if method.name in classMethod[subgraph.name]:
                         svg_str = graphviz.Source(method.graphViz(), format='svg').pipe().decode('utf-8')
                         method_arr.append({method.name: svg_str})
                 if method_arr:

@@ -12,6 +12,7 @@ def create_app():
     from .routes.attribute import attribute_bp
     from .routes.call_graph import call_graph_bp
     from .routes.pdg import pdg_bp
+    from .routes.hello import hello_bp
 
     app.register_blueprint(visualize_bp)
     app.register_blueprint(source_bp)
@@ -20,5 +21,6 @@ def create_app():
     app.register_blueprint(attribute_bp)
     app.register_blueprint(call_graph_bp)
     app.register_blueprint(pdg_bp)
+    app.register_blueprint(hello_bp)
     
     return app
