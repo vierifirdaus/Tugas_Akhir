@@ -6,10 +6,7 @@ class EdgeLabel:
         self.fontname = None
         self.label = None
         self.color = None
-        start = input_str.find("[") + 1
-        end = input_str.find("]")
-        attr_str = input_str[start:end].strip()
-        attrs = AttributeParser.parse(attr_str)
+        attrs = AttributeParser.parse(input_str.strip())
         self.fontname = attrs.get("fontname", "DejaVu Sans Mono")
         self.label = attrs.get("label", None)
         if self.label is not None:
