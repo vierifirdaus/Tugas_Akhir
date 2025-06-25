@@ -17,10 +17,7 @@ class Graph:
         self.style = None
         self.shape = None
 
-        start = input_str.find("[") + 1
-        end = input_str.find("]")
-        attr_str = input_str[start:end].strip()
-        attrs = AttributeParser.parse(attr_str)
+        attrs = AttributeParser.parse(input_str.strip())
 
 
         self.bb = attrs.get("bb")
@@ -36,9 +33,10 @@ class Graph:
         self.color = attrs.get("color")
         self.style = attrs.get("style")
         self.shape = attrs.get("shape")
-
-        if(self.label[0:3] == 'cfg') : 
-            self.label = 'Main'
+        if self.label is not None :
+            if(len(self.label)>1) : 
+                if(self.label[0:3] == 'cfg') : 
+                    self.label = 'Main'
         if self.label is not None:
             self.label = self.label.replace('"', "'")
 
@@ -48,14 +46,7 @@ class Graph:
         attrs = []
         
         if self.bb is not None:
-            strBB = ""
-            lenStrBB = len(self.bb)
-            for i in range(lenStrBB) :
-                if(i==0) :
-                    strBB = str(self.bb[i])
-                else :
-                    strBB = strBB + "," + str(self.bb[i])
-            attrs.append(f'bb="{strBB}"')
+            attrs.append(f'bb="{self.bb}"')
         if self.compound is not None:
             attrs.append(f'compound={str(self.compound).lower()}')
         if self.fontname is not None:
@@ -65,14 +56,7 @@ class Graph:
         if self.lheight is not None:
             attrs.append(f'lheight={self.lheight}')
         if self.lp is not None:
-            strLP = ""
-            lenStrLP = len(self.lp)
-            for i in range(lenStrLP) :
-                if(i==0) :
-                    strLP = str(self.lp[i])
-                else :
-                    strLP = strLP + "," + str(self.lp[i])
-            attrs.append(f'lp="{strLP}"')
+            attrs.append(f'lp="{self.lp}"')
         if self.lwidth is not None:
             attrs.append(f'lwidth={self.lwidth}')
         if self.pack is not None:
@@ -84,32 +68,10 @@ class Graph:
         if self.color is not None:
             attrs.append(f'color="{self.color}"')
         if self.style is not None:
-            strStyle = ""
-            lenStrStyle = len(self.style)
-            if isinstance(self.style, str):
-                attrs.append(f'style="{self.style}"')
-            else:
-                for i in range(lenStrStyle):
-                    if i == 0:
-                        strStyle += str(self.style[i])
-                    else:
-                        strStyle += "," + str(self.style[i])
-                attrs.append(f'style="{strStyle}"')
+            attrs.append(f'style="{self.style}"')
         if self.shape is not None:
             attrs.append(f'shape={self.shape}')
         if attrs:
             return f'graph [{", ".join(attrs)}]'
         return ''
-
-input = r"""graph [bb="3355,142.5,4097,295.75",
-				color=purple,
-				compound=true,
-				fontname="DejaVu Sans Mono",
-				label="",
-				rankdir=TB,
-				ranksep=0.02,
-				shape=tab,
-				style=filled
-			];"""
-# graph = Graph(input)
-# print(graph.graphViz())
+    

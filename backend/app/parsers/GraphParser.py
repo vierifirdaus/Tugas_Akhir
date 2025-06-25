@@ -6,6 +6,7 @@ from .Node import Node
 from .NodeLabel import NodeLabel
 from .Edge import Edge
 from .EdgeLabel import EdgeLabel
+from .ExtractSubgraph import extract_subgraph
 
 class GraphParser:
     def __init__(self, input_str, parent=None, types=None):
@@ -34,16 +35,20 @@ class GraphParser:
         end = input_str.rfind("}")
         if start == -1 or end == -1:
             return
-
         content = input_str[start:end].strip()
+        subgraph_list = extract_subgraph(input_str)
+
+        for subGraph in subgraph_list:
+            sub_parser = GraphParser(subGraph, parent=self,types=self.typeCode)  
+            if sub_parser.name == "KEY":
+                continue
+            self.subGraph.append(sub_parser)
         patterns = [
-            r'(?:[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\];)',  # Nodes (tanpa | di akhir)
-            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\](?:\s*;)?)', # Edges
-            r'(?:graph\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', # Graph attributes
-            r'(?:node\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', # Node attributes
-            r'(?:edge\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', # Edge attributes
-            r'(?:subgraph\s+\w+\s*{(?:(?R)|[^{}])*})', # Subgraphs (rekursif)
-            r'(?:digraph\s+\w+\s*{(?:(?R)|[^{}])*})' # Digraphs (rekursif)
+            r'(?:[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\];)',  
+            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\](?:\s*;)?)', 
+            r'(?:graph\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', 
+            r'(?:node\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', 
+            r'(?:edge\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])',
         ]
 
         full_pattern = '|'.join(patterns)
@@ -62,11 +67,6 @@ class GraphParser:
                 self.nodeLabel = NodeLabel(block)
             elif block.startswith("edge"):
                 self.edgeLabel = EdgeLabel(block)
-            elif block.startswith("subgraph") or block.startswith("digraph"):
-                sub_parser = GraphParser(block, parent=self,types=self.typeCode)  
-                if sub_parser.name == "KEY":
-                    continue
-                self.subGraph.append(sub_parser)
             elif edge_check:
                 try:
                     self.edge.append(Edge(block))
@@ -81,7 +81,6 @@ class GraphParser:
             else:
                 print(f"[!] Tidak dikenali dan dilewati: {block}")
 
-        # assign type setelah seluruh subgraph di-parse
         for sub in self.subGraph:
             sub.assign_type()
         self.assign_type()

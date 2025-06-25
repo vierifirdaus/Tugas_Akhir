@@ -6,9 +6,7 @@ class NodeLabel:
         self.fontname = None
         self.label = None
         self.color = None
-        start = input_str.find("[") + 1
-        end = input_str.find("]")
-        attr_str = input_str[start:end].strip()
+        attr_str = input_str.strip()
         attrs = AttributeParser.parse(attr_str)
         self.fontname = attrs.get("fontname", "DejaVu Sans Mono")
         self.label = attrs.get("label", None)
@@ -18,8 +16,6 @@ class NodeLabel:
 
     def __str__(self):
         return f"NodeLabel(fontname={self.fontname}, label={self.label}, color={self.color})"
-    def addAttribute(self, key, value):
-        setattr(self, key, value)
     def graphViz(self):
         attrs = []
 
@@ -29,7 +25,6 @@ class NodeLabel:
             attrs.append(f'label="{self.label}"')
         if self.color is not None:
             attrs.append(f'color="{self.color}"')
-        
         if attrs :
             return f'node [{", ".join(attrs)}]'
         return ""
