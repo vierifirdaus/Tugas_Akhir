@@ -13,12 +13,6 @@ BUILTIN_FUNCTIONS_TO_IGNORE = {
 
 
 class CallGraphVisitor(ast.NodeVisitor):
-    """
-    AST Visitor yang lebih canggih untuk mengekstrak call graph.
-    - Menggunakan scope stack untuk menangani metode kelas dan fungsi standalone.
-    - Menginferensikan tipe variabel dari `isinstance` dan loop `for`.
-    - Mendeteksi pemanggilan pada `self` dan pada variabel yang tipenya diinferensikan.
-    """
     def __init__(self):
         self.calls = set()
         self.scope_stack: List[str] = []
@@ -31,7 +25,6 @@ class CallGraphVisitor(ast.NodeVisitor):
     def get_current_class_scope(self) -> str:
         if self.scope_stack and '.' in self.scope_stack[-1]:
             return self.scope_stack[-1].split('.')[0]
-        # Jika scope saat ini adalah kelas itu sendiri
         if self.scope_stack and '.' not in self.scope_stack[-1]:
              return self.scope_stack[-1]
         return None
@@ -39,7 +32,6 @@ class CallGraphVisitor(ast.NodeVisitor):
     def visit_ClassDef(self, node: ast.ClassDef):
         self.scope_stack.append(node.name)
         
-        # Pra-pemindaian untuk inferensi tipe koleksi dari `add_product` atau metode serupa
         for body_item in node.body:
             if isinstance(body_item, ast.FunctionDef) and len(body_item.args.args) > 1:
                 param_name = body_item.args.args[1].arg
@@ -76,9 +68,6 @@ class CallGraphVisitor(ast.NodeVisitor):
 
         original_var_types = self.current_method_var_types.copy()
         self.current_method_var_types.clear()
-        
-        # --- PERBAIKAN: Inferensi tipe untuk parameter metode ---
-        # Mencari `isinstance(param, Type)` di dalam body metode
         for param in node.args.args:
             param_name = param.arg
             if param_name == 'self': continue
@@ -92,7 +81,6 @@ class CallGraphVisitor(ast.NodeVisitor):
                         inferred_type = call_node.args[1].id
                         self.current_method_var_types[param_name] = inferred_type
                         break
-        # --- Akhir Perbaikan ---
 
         current_class = self.get_current_class_scope()
         if current_class:
@@ -120,7 +108,6 @@ class CallGraphVisitor(ast.NodeVisitor):
 
         callee_full_name = None
         
-        # Kasus 1: Pemanggilan pada 'self' -> self.method()
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == 'self':
             class_name = self.get_current_class_scope()
             if class_name:
@@ -134,9 +121,7 @@ class CallGraphVisitor(ast.NodeVisitor):
                 method_called = node.func.attr
                 callee_full_name = f"{inferred_class_type}.{method_called}"
 
-        # Kasus 3: Pemanggilan fungsi standalone -> my_function()
         elif isinstance(node.func, ast.Name):
-            # Abaikan fungsi built-in yang umum
             if node.func.id not in BUILTIN_FUNCTIONS_TO_IGNORE:
                 callee_full_name = node.func.id
 

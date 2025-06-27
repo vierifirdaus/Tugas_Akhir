@@ -60,7 +60,9 @@ export function parseCFG(
   yOffset = processFunctions(functionResult, nodesArray, yOffset);
 
   // 3. Proses Main result di bawah semuanya\
+  console.log("mainresulttt ",mainResult)
   if( mainResult != '' && mainResult != null) {
+    console.log("masuk pak eko")
     processMainResult(mainResult, nodesArray, yOffset);
   }
 

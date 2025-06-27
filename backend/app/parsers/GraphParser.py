@@ -6,7 +6,7 @@ from .Node import Node
 from .NodeLabel import NodeLabel
 from .Edge import Edge
 from .EdgeLabel import EdgeLabel
-from .ExtractSubgraph import extract_subgraph
+from .ExtractSubgraph import extract_subgraph,hapus_subgraph_dan_cetak
 
 class GraphParser:
     def __init__(self, input_str, parent=None, types=None):
@@ -42,20 +42,22 @@ class GraphParser:
             sub_parser = GraphParser(subGraph, parent=self,types=self.typeCode)  
             if sub_parser.name == "KEY":
                 continue
+            print("")
             self.subGraph.append(sub_parser)
         patterns = [
-            r'(?:[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\];)',  
-            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\](?:\s*;)?)', 
-            r'(?:graph\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', 
-            r'(?:node\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])', 
-            r'(?:edge\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\])',
+            r'(?:[A-Za-z0-9_]+\s*->\s*[A-Za-z0-9_]+\s*\[[\s\S]*?\];)',
+            r'(?:graph\s*\[[\s\S]*?\];)',
+            r'(?:node\s*\[[\s\S]*?\];)',
+            r'(?:edge\s*\[[\s\S]*?\];)',
+            r'(?:[A-Za-z0-9_]+\s*\[[\s\S]*?\];)',
         ]
 
         full_pattern = '|'.join(patterns)
-        blocks = regex.findall(full_pattern, content, regex.DOTALL)
+        hasil_hapus = hapus_subgraph_dan_cetak(input_str)
+        blocks = regex.findall(full_pattern, hasil_hapus, regex.DOTALL)
         for block in blocks:
             block = block.strip()
-
+            # print("block ",self.name,block)
             space_split = block.split(" ")
             edge_check = False
             if len(space_split) > 1 :
@@ -73,7 +75,7 @@ class GraphParser:
                 except Exception as e:
                     print(f"Failed to parse edge: {e}")
                     print("block edge:", block)
-            elif regex.match(r'(?:[A-Za-z0-9_]+\s*\[(?:[^"[\]]|"[^"]*"|\[.*?\])*?\];)', block, regex.DOTALL):
+            elif regex.match(r'(?:[A-Za-z0-9_]+\s*\[[\s\S]*?\];)', block, regex.DOTALL):
                 try:
                     self.node.append(Node(block))
                 except Exception as e:
@@ -152,7 +154,6 @@ class GraphParser:
         res = []
         for subgraph in self.subGraph:
             if subgraph.type == "function":
-                print("Function name:", subgraph.graphViz())
                 svg_str = graphviz.Source(subgraph.graphViz(), format='svg').pipe().decode('utf-8')
                 res.append({subgraph.name: svg_str})
             res += subgraph.collectionFunction()

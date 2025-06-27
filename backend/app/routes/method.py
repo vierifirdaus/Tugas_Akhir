@@ -60,10 +60,12 @@ def method():
             dot_content = generate_cfg(code, base_filename, public_dir)
             types = parse_code(code)
             parser = GraphParser.GraphParser(dot_content, types=types)
+            
             collection_method = parser.collectionMethod()
             collection_function = parser.collectionFunction()
             collection_main = None
             if types['main'].strip():
+                print("types main",types['main'])
                 main_filename_base = f'cfg_{uuid.uuid4().hex}'
                 main_dot_path = os.path.join(public_dir, main_filename_base + '.dot')
                 files_to_delete.append(main_dot_path)
@@ -85,14 +87,11 @@ def method():
             }), 400
             
         finally:
-            # print("oke")
             for file_path in files_to_delete:
                 try:
                     if os.path.exists(file_path):
-                        # os.remove(file_path)
-                        print(f"Successfully deleted file: {file_path}") # Optional: untuk logging
+                        print(f"Successfully deleted file: {file_path}")
                 except Exception as e:
-                    # Sebaiknya log error ini daripada membiarkannya crash
                     print(f"Error deleting file {file_path}: {e}")
             
     except Exception as e:
