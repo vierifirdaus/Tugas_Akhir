@@ -25,7 +25,7 @@ services:
     container_name: visualisasi-frontend
     # Memetakan port 3000 di mesin Anda ke port 3000 di dalam container
     ports:
-      - "3000:3000"
+      - "3001:3001"
     # Variabel lingkungan untuk frontend
     environment:
       # Ini adalah kunci komunikasi! Frontend akan memanggil API di URL ini.

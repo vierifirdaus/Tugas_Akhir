@@ -29,7 +29,7 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 # Jika kamu pakai env file, copy juga .env.production (jika ada)
 # COPY --from=builder /app/.env.production ./.env.production
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Jalankan Next.js production server
 CMD ["npm", "start"]
