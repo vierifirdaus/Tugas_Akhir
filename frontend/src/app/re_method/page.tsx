@@ -74,7 +74,7 @@ export default function MethodVisualizationPage() {
         attributesResponse
       );
 
-      let combinedEdges = [...parsedEdges];
+      const combinedEdges = [...parsedEdges];
 
       // Fetch additional graph data in parallel if selected
       const graphRequests = [];

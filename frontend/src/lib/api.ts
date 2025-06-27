@@ -1,17 +1,20 @@
 // src/lib/api.ts
 import { API_BASE_URL } from '@/constants/flowConstants';
 import { VisualizeCodePayload, VisualizeCodeResponse, CallGraphResponse, AttributesResponse, PDGResponse } from '@/types';
-
 /**
  * Helper function to handle connection errors
  */
-function handleConnectionError(error: any): never {
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.error("Connection error:", error);
-        throw new Error('error connection');
+function handleConnectionError(error: unknown): never {
+    if (error instanceof Error) {
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+            console.error("Connection error:", error);
+            throw new Error('error connection');
+        }
+        console.error("API error:", error);
+        throw error;
     }
-    console.error("API error:", error);
-    throw error;
+    console.error("Unknown error occurred:", error);
+    throw new Error('An unknown error occurred');
 }
 
 /**

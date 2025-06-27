@@ -15,7 +15,7 @@ import {
   ProOptions,
 } from '@xyflow/react';
 import { toPng, toSvg } from 'html-to-image';
-import { BookText, DownloadIcon, X } from 'lucide-react';
+import { BookText, DownloadIcon } from 'lucide-react';
 import { CustomNode, CustomEdge } from '@/types';
 import { LegendModal } from './Modal';
 

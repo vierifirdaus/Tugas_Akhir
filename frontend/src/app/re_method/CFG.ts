@@ -165,7 +165,7 @@ function processClasses(
 // =========================================================================
 
 function processMethods(className: string, methods: BackendMethodObject[]): MethodNodeInfo[] {
-  return methods.map((methodObj: BackendMethodObject, methodIdx: number) => {
+  return methods.map((methodObj: BackendMethodObject) => {
     const methodName = Object.keys(methodObj)[0];
     const svgContent = methodObj[methodName] || "";
 
@@ -285,10 +285,10 @@ function processAttributes(
   attributes[className]?.forEach((attribute) => {
     const attributeName = attribute;
     const attributeSvgContent = createAttributeSvg(attributeName);
-    const { width: attrSvgWidth, height: attrSvgHeight } = getSvgDimensions(attributeSvgContent);
+    const { width: attrSvgWidth} = getSvgDimensions(attributeSvgContent);
     
     const attrNodeWidth = attrSvgWidth + SVG_NODE_EXTRA_WIDTH_PADDING;
-    const attrNodeHeight = attrSvgHeight + SVG_NODE_EXTRA_HEIGHT_PADDING;
+    // const attrNodeHeight = attrSvgHeight + SVG_NODE_EXTRA_HEIGHT_PADDING;
     
     nodesArray.push({
       id: `${groupId}-attribute-${attributeName}`,
@@ -316,7 +316,7 @@ function processAttributes(
 
 function createAttributeSvg(attributeName: string, maxWidth: number = 180, lineHeight: number = 20): string {
   const words = attributeName.split(' ');
-  let lines: string[] = [];
+  const lines: string[] = [];
   let currentLine = words[0];
 
   for (let i = 1; i < words.length; i++) {

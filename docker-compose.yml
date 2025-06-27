@@ -31,7 +31,7 @@ services:
       # Ini adalah kunci komunikasi! Frontend akan memanggil API di URL ini.
       # 'backend' adalah nama layanan backend yang didefinisikan di atas.
       # Docker Compose akan secara otomatis membuatkan network dan DNS.
-      - NEXT_PUBLIC_API_URL=http://212.85.26.216:5000
+      - NEXT_PUBLIC_API_URL=http://212.85.26.216:5001
     # Memastikan layanan 'backend' dijalankan sebelum layanan 'frontend'
     depends_on:
       - backend

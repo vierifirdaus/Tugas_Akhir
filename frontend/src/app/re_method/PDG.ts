@@ -1,6 +1,6 @@
 // src/app/method/PDG.ts
 import { PDGResponse, CustomEdge } from "@/types";
-import { MarkerType, Position } from "@xyflow/react";
+import { MarkerType } from "@xyflow/react";
 
 /**
  * Mem-parsing respons PDG dari backend menjadi array edge untuk React Flow.
