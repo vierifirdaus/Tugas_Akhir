@@ -22,4 +22,4 @@ export const SVG_NODE_EXTRA_WIDTH_PADDING = 12; // 6 padding kiri + 6 padding ka
 export const SVG_NODE_EXTRA_HEIGHT_PADDING = 40; // 6 padding atas + 6 padding bawah + tinggi label
 export const CLASS_SPACING_HORIZONTAL = 50;
 // URL API (sebaiknya gunakan environment variable)
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://212.85.26.216:5001';

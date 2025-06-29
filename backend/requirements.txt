@@ -3,3 +3,4 @@ flask-cors
 py2cfg
 graphviz
 regex
+gunicorn

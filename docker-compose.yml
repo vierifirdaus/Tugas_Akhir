@@ -1,39 +1,40 @@
-# Gunakan versi syntax docker-compose terbaru
+# docker-compose.yml
+
 version: '3.8'
 
-# Definisikan semua layanan (container) yang akan dijalankan
 services:
-  # Layanan untuk backend Flask
-  backend:
-    # Membangun image dari Dockerfile di dalam folder './backend'
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: visualisasi-backend
-    # Memetakan port 5000 di mesin Anda ke port 5000 di dalam container
-    ports:
-      - "5001:5001"
-    # (Opsional) Restart container secara otomatis jika terjadi kegagalan
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy-manager
     restart: unless-stopped
-
-  # Layanan untuk frontend Next.js
-  frontend:
-    # Membangun image dari Dockerfile di dalam folder './frontend'
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: visualisasi-frontend
-    # Memetakan port 3000 di mesin Anda ke port 3000 di dalam container
     ports:
-      - "3001:3001"
-    # Variabel lingkungan untuk frontend
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - ./npm-data/data:/data
+      - ./npm-data/letsencrypt:/etc/letsencrypt
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    container_name: visualisasi-backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: visualisasi-frontend
+    restart: unless-stopped
     environment:
-      # Ini adalah kunci komunikasi! Frontend akan memanggil API di URL ini.
-      # 'backend' adalah nama layanan backend yang didefinisikan di atas.
-      # Docker Compose akan secara otomatis membuatkan network dan DNS.
-      - NEXT_PUBLIC_API_URL=http://212.85.26.216:5001
-    # Memastikan layanan 'backend' dijalankan sebelum layanan 'frontend'
+      - NEXT_PUBLIC_API_URL=https://api.vierifirdaus.site
     depends_on:
       - backend
-    # (Opsional) Restart container secara otomatis jika terjadi kegagalan
-    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

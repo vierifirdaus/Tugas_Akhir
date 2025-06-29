@@ -1,0 +1,2 @@
+[29/Jun/2025:11:08:30 +0000] 200 - GET http vierifirdaus.site "/" [Client 103.81.231.229] [Length 568] [Gzip 1.86] "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" "-"
+[29/Jun/2025:11:10:41 +0000] 200 - GET http vierifirdaus.site "/" [Client 154.47.29.169] [Length 568] [Gzip 1.86] "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0" "-"
