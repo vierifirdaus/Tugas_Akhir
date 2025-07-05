@@ -132,6 +132,12 @@ const CodeInputPanel: React.FC<CodeInputPanelProps> = ({
     onVisualizeClick(pythonCode, selectedGraphTypes);
   };
 
+  function checkSelectedGraphTypes() {
+    return selectedGraphTypes['CFG'] || selectedGraphTypes['CG'] || selectedGraphTypes['PDG'];
+  }
+  function isNullPythonCode() {
+    return pythonCode === null || pythonCode.trim() === '';
+  }
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -258,7 +264,7 @@ const CodeInputPanel: React.FC<CodeInputPanelProps> = ({
                           bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2
                           focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150
                           disabled:bg-slate-400 disabled:cursor-not-allowed`}
-              disabled={isVisualizing}
+              disabled={isVisualizing || checkSelectedGraphTypes() === false || isNullPythonCode() === true}
             >
               {isVisualizing ? 'Visualizing...' : 'Visualize'}
             </button>
