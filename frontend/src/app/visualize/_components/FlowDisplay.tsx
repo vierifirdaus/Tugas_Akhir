@@ -35,6 +35,7 @@ interface FlowDisplayProps {
   fitViewOptions?: FitViewOptions;
   proOptions?: ProOptions;
   onNodeClick?: (event: React.MouseEvent, node: CustomNode) => void;
+  visualizationError?: string | null;
 }
 
 const FlowDisplay: React.FC<FlowDisplayProps> = ({
@@ -52,47 +53,63 @@ const FlowDisplay: React.FC<FlowDisplayProps> = ({
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   const reactFlowWrapperRef = useRef<HTMLDivElement>(null);
   
-  // BARU: Ref untuk menyimpan ID dari toast yang sedang aktif
   const toastId = useRef<string | number | null>(null);
 
-  // BARU: useEffect untuk menampilkan dan menyembunyikan toast
-  useEffect(() => {
-    if (isFlowLoading) {
-      // Jika proses dimulai, tampilkan toast loading dan simpan ID-nya
-      // saya ingin toast nya ditengah
-      toastId.current = toast.loading("Processing flow visualization...", {
+  // In FlowDisplay.tsx
+useEffect(() => {
+  if (isFlowLoading) {
+    toastId.current = toast.loading("Processing flow visualization...", {
+      position: "top-center",
+      autoClose: false,
+      closeButton: true,
+    });
+  } else if (toastId.current !== null) {
+    // Only show success if there are nodes (indicating successful visualization)
+    if (nodes.length > 0) {
+      toast.update(toastId.current, { 
         position: "top-center",
-        autoClose: false, // Jangan tutup otomatis
+        render: "Process completed successfully!", 
+        type: "success", 
+        isLoading: false,
+        autoClose: 3000, 
         closeButton: true,
       });
-      } else {
-      // Jika proses selesai, dan ada toast yang aktif
-      if (toastId.current !== null) {
-        // Update toast tersebut menjadi pesan sukses
-        toast.update(toastId.current, { 
-          position: "top-center",
-          render: "Process completed successfully!", 
-          type: "success", 
-          isLoading: false,
-          autoClose: 3000, // Tutup otomatis setelah 3 detik
-          closeButton: true,
-        });
-        // Reset ref
-        toastId.current = null;
-      }
+    } else {
+      // If no nodes, dismiss the loading toast without showing success
+      toast.dismiss(toastId.current);
     }
-  }, [isFlowLoading]);
+    toastId.current = null;
+  }
+}, [isFlowLoading, nodes.length]);
 
 
   const handleDownload = useCallback(async (format: 'png' | 'svg') => {
     if (!reactFlowWrapperRef.current) {
-        toast.error('Flow area not available.');
+        toast.error('Flow area not available.', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         return;
     }
 
     const viewportElement = reactFlowWrapperRef.current.querySelector('.react-flow__viewport') as HTMLElement;
     if (!viewportElement) {
-        toast.error('React Flow viewport element not found.');
+        toast.error('React Flow viewport element not found.', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         return;
     }
     

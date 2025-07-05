@@ -1,103 +1,194 @@
-import Image from "next/image";
+// src/app/method/page.tsx
+'use client';
 
-export default function Home() {
+import React, { useState, useMemo, useCallback } from 'react';
+import {
+  useNodesState,
+  useEdgesState,
+  OnNodesChange,
+  OnEdgesChange,
+  Node,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
+import { fetchAttributes, fetchCFG, fetchCallGraph, fetchPDG } from '@/lib/api';
+import { CustomNode, CustomEdge} from '@/types';
+import { INITIAL_PYTHON_CODE } from '@/constants/codePythonConstants';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import SVGMethodNode from './visualize/_components/SVGMethodNode';
+import ClassGroupNode from './visualize/_components/ClassGroupNode';
+import { parseCFG } from './visualize/CFG';
+import CodeInputPanel, { SelectedGraphTypes } from './visualize/_components/CodeInputPanel';
+import FlowDisplay from './visualize/_components/FlowDisplay';
+import DetailsSidebar from './visualize/_components/DetailSidebar';
+import { parseCallGraph } from './visualize/CallGraph';
+import { parsePDG } from './visualize/PDG';
+
+const DEFAULT_PANEL_WIDTH = 400;
+const MIN_PANEL_WIDTH = 300;
+const MAX_PANEL_WIDTH = 700;
+
+export default function MethodVisualizationPage() {
+  const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
+  const [isLoadingApi, setIsLoadingApi] = useState<boolean>(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<CustomNode | null>(null);
+
+  const nodeTypes = useMemo(() => ({
+    svgMethod: SVGMethodNode,
+    classGroup: ClassGroupNode,
+  }), []);
+
+  const handleVisualize = useCallback(async (code: string, selectedGraphTypes: SelectedGraphTypes) => {
+    setIsLoadingApi(true);
+    setApiError(null);
+    setSelectedNode(null);
+    
+    try {
+      const [cfgResponse, attributesResponse] = await Promise.all([
+        fetchCFG({ code }).catch(err => {
+          throw new Error(err.message === 'error connection' ? 
+            'Failed to connect to server. Please check your connection.' : 
+            'Failed to fetch control flow graph');
+        }),
+        fetchAttributes({ code }).catch(err => {
+          throw new Error(err.message === 'error connection' ? 
+            'Failed to connect to server. Please check your connection.' : 
+            'Failed to fetch attributes');
+        })
+      ]);
+
+      if (!cfgResponse || !attributesResponse) {
+        toast.error('Failed to fetch required data', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        throw new Error('Failed to fetch required data');
+      }
+
+      const { nodes: parsedNodes, edges: parsedEdges } = parseCFG(
+        cfgResponse.class, 
+        cfgResponse.function, 
+        cfgResponse.mainCode, 
+        attributesResponse
+      );
+
+      const combinedEdges = [...parsedEdges];
+
+      // Fetch additional graph data in parallel if selected
+      const graphRequests = [];
+      if (selectedGraphTypes['CG']) {
+        graphRequests.push(
+          fetchCallGraph({ code })
+            .then(parseCallGraph)
+            .catch(err => {
+              toast.error(err.message === 'error connection' ? 
+                'Connection error while fetching call graph' : 
+                'Failed to parse call graph', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+              return []; // Return empty array to prevent Promise.all from failing
+            })
+        );
+      }
+      if (selectedGraphTypes['PDG']) {
+        graphRequests.push(
+          fetchPDG({ code })
+            .then(parsePDG)
+            .catch(err => {
+              toast.error(err.message === 'error connection' ? 
+                'Connection error while fetching PDG' : 
+                'Failed to parse PDG', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+              return []; 
+            })
+        );
+      }
+
+      const additionalEdges = await Promise.all(graphRequests);
+      combinedEdges.push(...additionalEdges.flat());
+
+      setNodes(parsedNodes);
+      setEdges(combinedEdges);
+      return true;
+    } catch (err) {
+      console.error("Failed to visualize code:", err);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setApiError(errorMessage);
+      toast.error(errorMessage, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        return false;
+    } finally {
+      setIsLoadingApi(false);
+    }
+  }, [setNodes, setEdges]);
+
+  const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node as CustomNode);
+  }, []);
+
+  const handleCloseSidebar = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div className="flex h-screen w-screen bg-slate-100 font-sans overflow-hidden">
+      <ToastContainer 
+      />
+      <CodeInputPanel
+        defaultCode={INITIAL_PYTHON_CODE}
+        onVisualizeClick={handleVisualize}
+        isVisualizing={isLoadingApi}
+        visualizationError={apiError}
+        initialPanelWidth={DEFAULT_PANEL_WIDTH}
+        minPanelWidth={MIN_PANEL_WIDTH}
+        maxPanelWidth={MAX_PANEL_WIDTH}
+      />
+      <FlowDisplay
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange as OnNodesChange<CustomNode>}
+        onEdgesChange={onEdgesChange as OnEdgesChange<CustomEdge>}
+        nodeTypes={nodeTypes}
+        isFlowLoading={isLoadingApi}
+        onNodeClick={handleNodeClick}
+      />
+      <DetailsSidebar
+        node={selectedNode}
+        onClose={handleCloseSidebar}
+      />
     </div>
   );
 }
