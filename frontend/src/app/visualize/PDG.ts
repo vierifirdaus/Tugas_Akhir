@@ -51,6 +51,14 @@ export function parsePDG(pdgResponse: PDGResponse): CustomEdge[] {
             stroke: "#40ff00",
             },
           label: `Dependency from ${sourceMethod} \n to ${targetAttribute}`,
+          labelStyle: {
+            fill: '#333',
+            fontWeight: 500,
+          },
+          labelBgStyle: {
+            fill: 'transparent',
+            stroke: 'none' 
+          },
         });
       });
     }
