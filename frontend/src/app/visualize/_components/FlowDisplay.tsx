@@ -98,7 +98,7 @@ useEffect(() => {
         return;
     }
 
-    const viewportElement = reactFlowWrapperRef.current.querySelector('.react-flow__viewport') as HTMLElement;
+    const viewportElement = reactFlowWrapperRef.current.querySelector('.react-flow__renderer') as HTMLElement;
     if (!viewportElement) {
         toast.error('React Flow viewport element not found.', {
           position: "top-center",
@@ -161,8 +161,8 @@ useEffect(() => {
   return (
     <div className="flex-1 min-w-0 relative bg-graph-paper" ref={reactFlowWrapperRef}>
       <ReactFlow
-        minZoom={0.2}
-        maxZoom={4}
+        minZoom={0.01}
+        maxZoom={10}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}

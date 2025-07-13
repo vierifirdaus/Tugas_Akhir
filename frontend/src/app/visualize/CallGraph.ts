@@ -52,7 +52,15 @@ export function parseCallGraph(
           stroke: "#3b82f6",
         },
         label: `Call from ${sourceParts[1]} to ${targetParts[1]}`,
+        labelStyle: {
+          fill: "#333",
+          fontWeight: 500,
+        },
+        labelBgStyle: {
+            fill: 'transparent',
+            stroke: 'none' 
+          },
       };
     })
     .filter((edge) => edge !== null); // Filter out any null entries
-};
+}
