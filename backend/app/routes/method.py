@@ -29,7 +29,7 @@ def parse_code(code):
     result['main'] = "\n".join(main_code)
     return result
 
-def generate_cfg(code, base_filename, output_dir):
+def generate_graphviz(code, base_filename, output_dir):
     cfg_builder = CFGBuilder()
     cfg = cfg_builder.build_from_src(base_filename, code)
     output_path = os.path.join(output_dir, base_filename)
@@ -57,7 +57,7 @@ def method():
             dot_file_path = os.path.join(public_dir, base_filename + '.dot')
             files_to_delete.append(dot_file_path)
 
-            dot_content = generate_cfg(code, base_filename, public_dir)
+            dot_content = generate_graphviz(code, base_filename, public_dir)
             types = parse_code(code)
             parser = GraphParser.GraphParser(dot_content, types=types)
             
@@ -70,7 +70,7 @@ def method():
                 main_dot_path = os.path.join(public_dir, main_filename_base + '.dot')
                 files_to_delete.append(main_dot_path)
 
-                main_dot = generate_cfg(types['main'], main_filename_base, public_dir)
+                main_dot = generate_graphviz(types['main'], main_filename_base, public_dir)
                 parser_main = GraphParser.GraphParser(main_dot, types=None)
                 collection_main = graphviz.Source(parser_main.graphViz(), format='svg').pipe().decode('utf-8')
 

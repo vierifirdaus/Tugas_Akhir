@@ -1,6 +1,6 @@
 // src/app/method/_components/ClassGroupNode.tsx
 import React from "react";
-import { NodeProps} from "@xyflow/react"; 
+import { Handle, NodeProps, Position } from "@xyflow/react";
 import { CLASS_LABEL_HEADER_HEIGHT } from "@/constants/flowConstants";
 
 const categoryColorClasses = {
@@ -34,7 +34,7 @@ const categoryColorClasses = {
   },
 };
 
-const ClassGroupNode: React.FC<NodeProps> = ({ data, selected}) => {
+const ClassGroupNode: React.FC<NodeProps> = ({ data, selected }) => {
   const nodeWidth = typeof data?.width === "number" ? data.width : 300;
   const nodeHeight = typeof data?.height === "number" ? data.height : 150;
 
@@ -72,15 +72,21 @@ const ClassGroupNode: React.FC<NodeProps> = ({ data, selected}) => {
       </div>
 
       {/* Kontainer untuk SVG */}
-      {(data.category == "main" || data.category == "function") && (
-        <div
-          dangerouslySetInnerHTML={{ __html: data.svg || "" }}
-          className="overflow-visible p-7" // Sesuai style asli
-          style={{
-            width: nodeWidth,
-            height: nodeHeight,
-          }}
-        />
+      {(data.category === "main" || data.category === "function") && (
+        <>
+          <div
+            dangerouslySetInnerHTML={{ __html: data.svg || "" }}
+            className="overflow-visible p-7" // Sesuai style asli
+            style={{
+              width: nodeWidth,
+              height: nodeHeight,
+            }}
+          />
+          <div>
+            <Handle type="source" position={Position.Top} id="out" className="!bg-slate-400 !w-3 !h-3" />
+            <Handle type="target" position={Position.Bottom} id="in" className="!bg-slate-400 !w-3 !h-3" />
+          </div>
+        </>
       )}
 
       {/* Child nodes akan di-render secara otomatis oleh React Flow di sini */}

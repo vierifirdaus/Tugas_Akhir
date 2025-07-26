@@ -1,4 +1,3 @@
-# Class Induk
 class BankAccount:
     def __init__(self, owner, balance=0):
         self.owner = owner
@@ -34,17 +33,3 @@ class SavingsAccount(BankAccount):
         interest = self.balance * self.interest_rate
         self.balance += interest
         print(f"Interest of {interest} added to your balance.")
-
-def main():
-    print("Creating a bank account for Alice.")
-    alice_account = BankAccount("Alice", 1000)
-    print(f"Initial balance: {alice_account.get_balance()}")
-    alice_account.deposit(500)
-    alice_account.withdraw(200)
-    print(f"Final balance: {alice_account.get_balance()}")
-    print("\nCreating a savings account for Bob.")
-
-main()
-
-for i in range(5) :
-    print("This is a test for the C6.py file, iteration:", i + 1)
