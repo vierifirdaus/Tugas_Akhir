@@ -8,31 +8,36 @@ def visualize(code: str) -> str:
     f = open("backend/testing/output/cfg.dot", "r")
     return f.read()
 
-code = """
-class Engine:
-    def __init__(self, horsepower):
-        self.horsepower = horsepower
+code = r"""
+class Product:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
 
-    def start(self):
-        return "Engine started with {} horsepower".format(self.horsepower)
+    def get_name(self):
+        return self.name
 
-    def stop(self):
-        return "Engine stopped"
+    def get_price(self):
+        return self.price
 
-class Car:
-    def __init__(self, horsepower):
-        self.engine = Engine(horsepower)  
+class ShoppingCart:
+    def __init__(self):
+        self.items = []
 
-    def start_car(self):
-        return f"{self.engine.start()}"
+    def add_product(self, product, quantity=1):
+        
+        if not isinstance(product, Product):
+            raise ValueError("Item yang ditambahkan harus berupa produk.")
+        for _ in range(quantity):
+            self.items.append(product)
+        print(f"Added {quantity} x {product.get_name()} to cart.")
 
-    def stop_car(self):
-        return f"{self.engine.stop()}"
+    def calculate_total(self):
+        total = 0
+        for item in self.items:
+            total += item.get_price()
+        return total
 
-def main():
-    my_car = Car(150)  
-    print(my_car.start_car()) 
-    print(my_car.stop_car())  
 
 """
 print(visualize(code))

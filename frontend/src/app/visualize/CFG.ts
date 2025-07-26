@@ -399,7 +399,7 @@ function processFunctions(
 
     return {
       funcName,
-      groupId: `group-func-${funcName}`,
+      groupId: `group-${funcName}`,
       groupWidth,
       groupHeight,
       svgContent,

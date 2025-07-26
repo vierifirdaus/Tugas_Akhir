@@ -131,7 +131,8 @@ export default function MethodVisualizationPage() {
 
       const additionalEdges = await Promise.all(graphRequests);
       combinedEdges.push(...additionalEdges.flat());
-
+      console.log("hasil dari node nya : ", parsedNodes);
+      console.log("hasil dari edges nya : ", combinedEdges);
       setNodes(parsedNodes);
       setEdges(combinedEdges);
       return true;
@@ -164,31 +165,31 @@ export default function MethodVisualizationPage() {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen bg-slate-100 font-sans overflow-hidden">
-      <ToastContainer 
-      />
-      <CodeInputPanel
-        defaultCode={INITIAL_PYTHON_CODE}
-        onVisualizeClick={handleVisualize}
-        isVisualizing={isLoadingApi}
-        visualizationError={apiError}
-        initialPanelWidth={DEFAULT_PANEL_WIDTH}
-        minPanelWidth={MIN_PANEL_WIDTH}
-        maxPanelWidth={MAX_PANEL_WIDTH}
-      />
-      <FlowDisplay
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange as OnNodesChange<CustomNode>}
-        onEdgesChange={onEdgesChange as OnEdgesChange<CustomEdge>}
-        nodeTypes={nodeTypes}
-        isFlowLoading={isLoadingApi}
-        onNodeClick={handleNodeClick}
-      />
-      <DetailsSidebar
-        node={selectedNode}
-        onClose={handleCloseSidebar}
-      />
-    </div>
+<div className="flex h-screen w-screen bg-slate-100 font-sans overflow-hidden">
+  <ToastContainer 
+  />
+  <CodeInputPanel
+    defaultCode={INITIAL_PYTHON_CODE}
+    onVisualizeClick={handleVisualize}
+    isVisualizing={isLoadingApi}
+    visualizationError={apiError}
+    initialPanelWidth={DEFAULT_PANEL_WIDTH}
+    minPanelWidth={MIN_PANEL_WIDTH}
+    maxPanelWidth={MAX_PANEL_WIDTH}
+  />
+  <FlowDisplay
+    nodes={nodes}
+    edges={edges}
+    onNodesChange={onNodesChange as OnNodesChange<CustomNode>}
+    onEdgesChange={onEdgesChange as OnEdgesChange<CustomEdge>}
+    nodeTypes={nodeTypes}
+    isFlowLoading={isLoadingApi}
+    onNodeClick={handleNodeClick}
+  />
+  <DetailsSidebar
+    node={selectedNode}
+    onClose={handleCloseSidebar}
+  />
+</div>
   );
 }
