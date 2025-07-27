@@ -18,6 +18,8 @@ class CallGraphVisitor(ast.NodeVisitor):
         self.scope_stack: List[str] = []
         self.current_method_var_types: Dict[str, str] = {}
         self.instance_var_collection_types: Dict[str, Dict[str, str]] = {}
+        self.scope_stack: List[str] = ["main"]
+        self.variable_types: Dict[str, str] = {}
 
     def get_current_scope(self) -> str:
         return self.scope_stack[-1] if self.scope_stack else None
@@ -28,6 +30,18 @@ class CallGraphVisitor(ast.NodeVisitor):
         if self.scope_stack and '.' not in self.scope_stack[-1]:
              return self.scope_stack[-1]
         return None
+
+    def visit_Assign(self, node: ast.Assign):
+        # Hanya menangani assignment sederhana seperti `var = ClassName()`
+        if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
+            var_name = node.targets[0].id
+            # Dapatkan nama kelas yang dipanggil
+            if isinstance(node.value.func, ast.Name):
+                class_name = node.value.func.id
+                self.variable_types[var_name] = class_name
+        
+        # Tetap kunjungi node di dalamnya (penting untuk menangani pemanggilan constructor)
+        self.generic_visit(node)
 
     def visit_ClassDef(self, node: ast.ClassDef):
         self.scope_stack.append(node.name)
@@ -63,7 +77,12 @@ class CallGraphVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         parent_scope = self.get_current_scope()
-        current_scope_name = f"{parent_scope}.{node.name}" if parent_scope and '.' not in parent_scope else node.name
+
+        if parent_scope == "main":
+            current_scope_name = node.name
+        else:
+            current_scope_name = f"{parent_scope}.{node.name}"
+
         self.scope_stack.append(current_scope_name)
 
         original_var_types = self.current_method_var_types.copy()
@@ -102,9 +121,6 @@ class CallGraphVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call):
         caller = self.get_current_scope()
-        if not caller:
-            self.generic_visit(node)
-            return
 
         callee_full_name = None
         
@@ -116,17 +132,45 @@ class CallGraphVisitor(ast.NodeVisitor):
         # Kasus 2: Pemanggilan pada variabel lain -> product.get_name()
         elif isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
             var_name = node.func.value.id
+            inferred_class_type = None
+            
+            # Cek tipe variabel di scope metode saat ini
             if var_name in self.current_method_var_types:
                 inferred_class_type = self.current_method_var_types[var_name]
+            # Jika tidak ada, cek tipe variabel di scope global/modul
+            elif var_name in self.variable_types:
+                inferred_class_type = self.variable_types[var_name]
+            
+            if inferred_class_type:
                 method_called = node.func.attr
                 callee_full_name = f"{inferred_class_type}.{method_called}"
+
 
         elif isinstance(node.func, ast.Name):
             if node.func.id not in BUILTIN_FUNCTIONS_TO_IGNORE:
                 callee_full_name = node.func.id
 
         if callee_full_name:
-            self.calls.add(f"{caller} -> {callee_full_name}")
+            # Pastikan caller bukan nama metode jika pemanggilan berasal dari metode lain
+            if '.' in caller:
+                 caller_name = caller
+            # Jika caller adalah kelas, gunakan nama kelas saja
+            elif self.get_current_class_scope() and self.get_current_class_scope() in caller:
+                 caller_name = self.get_current_class_scope()
+            else:
+                 caller_name = "main"
+
+            # Koreksi jika caller adalah nama fungsi di dalam kelas
+            if '.' in caller:
+                caller_name = caller
+            else:
+                current_class_scope = self.get_current_class_scope()
+                if current_class_scope and caller != "main":
+                    caller_name = f"{current_class_scope}.{caller}"
+                else:
+                    caller_name = caller
+            
+            self.calls.add(f"{caller_name} -> {callee_full_name}")
 
         self.generic_visit(node)
 

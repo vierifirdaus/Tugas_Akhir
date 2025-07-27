@@ -32,10 +32,20 @@ export function parseCallGraph(
         console.warn(
           `Invalid source or target format at index ${index}: "${call}"`
         );
+        console.log("isi caller callee ", sourceParts, targetParts);
         sourceNodeId = `group-${parts[0]}`;
-        targetNodeId = `group-${parts[1]}`;
         callerSource = parts[0];
-        calleeTarget = parts[1];
+
+        // split callertarget 
+        let tempTargetParts = parts[1].split(".");
+        if(tempTargetParts.length>=2){
+          targetNodeId = `group-${tempTargetParts[0]}-${tempTargetParts[1]}`;
+          calleeTarget = tempTargetParts[1];
+        }
+        else{
+          targetNodeId = `group-${parts[1]}`;
+          calleeTarget = parts[1];
+        }
       }
       else{
         sourceNodeId = `group-${sourceParts[0]}-${sourceParts[1]}`;
