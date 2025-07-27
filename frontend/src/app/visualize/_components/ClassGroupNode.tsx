@@ -88,6 +88,15 @@ const ClassGroupNode: React.FC<NodeProps> = ({ data, selected }) => {
           </div>
         </>
       )}
+      {
+        (data.category === "class") && (
+          <>
+            <Handle type="source" position={Position.Top} id="out" className="!bg-slate-400 !w-3 !h-3" />
+            <Handle type="target" position={Position.Bottom} id="in" className="!bg-slate-400 !w-3 !h-3" />
+          </>
+        )
+      }
+      
 
       {/* Child nodes akan di-render secara otomatis oleh React Flow di sini */}
     </div>
