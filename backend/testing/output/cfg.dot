@@ -1,10 +1,10 @@
 digraph cluster0dot {
-	graph [bb="0,0,3015.5,491.62",
+	graph [bb="0,0,969,285.88",
 		compound=True,
 		fontname="DejaVu Sans Mono",
 		label=dot,
 		lheight=0.24,
-		lp="1507.8,12.625",
+		lp="484.5,12.625",
 		lwidth=0.27,
 		pack=False,
 		rankdir=TB,
@@ -14,447 +14,177 @@ digraph cluster0dot {
 		label="\N"
 	];
 	edge [fontname="DejaVu Sans Mono"];
-	subgraph cluster0Product {
-		graph [bb="123.5,358,1031.5,483.62",
-			compound=True,
+	subgraph cluster_1 {
+		graph [bb="8,94.25,234,146.25",
+			color=purple,
+			compound=true,
 			fontname="DejaVu Sans Mono",
-			label=Product,
-			lheight=0.24,
-			lp="577.5,471",
-			lwidth=0.65,
-			pack=False,
+			label="",
 			rankdir=TB,
-			ranksep=0.02
+			ranksep=0.02,
+			shape=tab,
+			style=filled
 		];
 		node [fontname="DejaVu Sans Mono"];
 		edge [fontname="DejaVu Sans Mono"];
-		subgraph cluster0__init__ {
-			graph [bb="131.5,366.62,275.5,450.38",
-				compound=True,
-				fontname="DejaVu Sans Mono",
-				label=__init__,
-				lheight=0.24,
-				lp="203.5,437.75",
-				lwidth=0.67,
-				pack=False,
-				rankdir=TB,
-				ranksep=0.02
-			];
-			node [fontname="DejaVu Sans Mono"];
-			edge [fontname="DejaVu Sans Mono"];
-			5	[fillcolor="#FFFB81",
-				height=0.59028,
-				label="self.name = name\lself.price = price\l",
-				pos="203.5,395.88",
-				shape=rectangle,
-				style="filled,solid",
-				width=1.7847];
-		}
-		subgraph cluster0get_name {
-			graph [bb="283.5,369.88,539.5,447.12",
-				compound=True,
-				fontname="DejaVu Sans Mono",
-				label=get_name,
-				lheight=0.24,
-				lp="411.5,434.5",
-				lwidth=0.85,
-				pack=False,
-				rankdir=TB,
-				ranksep=0.02
-			];
-			node [fontname="DejaVu Sans Mono"];
-			edge [fontname="DejaVu Sans Mono"];
-			8	[fillcolor="#98fb98",
-				height=0.5,
-				label="return self.name\l",
-				pos="411.5,395.88",
-				shape=parallelogram,
-				style="filled,solid",
-				width=3.3284];
-		}
-		subgraph cluster0get_price {
-			graph [bb="547.5,369.88,793.5,447.12",
-				compound=True,
-				fontname="DejaVu Sans Mono",
-				label=get_price,
-				lheight=0.24,
-				lp="670.5,434.5",
-				lwidth=0.79,
-				pack=False,
-				rankdir=TB,
-				ranksep=0.02
-			];
-			node [fontname="DejaVu Sans Mono"];
-			edge [fontname="DejaVu Sans Mono"];
-			12	[fillcolor="#98fb98",
-				height=0.5,
-				label="return self.price\l",
-				pos="670.5,395.88",
-				shape=parallelogram,
-				style="filled,solid",
-				width=3.1998];
-		}
-		3	[fillcolor="#FFFB81",
-			height=0.82986,
-			label="def __init__(self, name, price):...\ldef get_name(self):...\ldef get_price(self):...\l",
-			pos="913.5,395.88",
-			shape=rectangle,
-			style="filled,solid",
-			width=3.0451];
+		2	[color="#E552FF",
+			height=0.5,
+			label=print,
+			pos="43,120.25",
+			shape=tab,
+			style=filled,
+			width=0.75];
+		11	[color="#E552FF",
+			height=0.5,
+			label=add,
+			pos="115,120.25",
+			shape=tab,
+			style=filled,
+			width=0.75];
+		12	[color="#E552FF",
+			height=0.5,
+			label=subtract,
+			pos="193,120.25",
+			shape=tab,
+			style=filled,
+			width=0.90972];
 	}
-	subgraph cluster0ShoppingCart {
-		graph [bb="1039.5,33.25,2665.5,480.38",
+	subgraph cluster0add {
+		graph [bb="209,200.62,415,277.88",
 			compound=True,
 			fontname="DejaVu Sans Mono",
-			label=ShoppingCart,
+			label=add,
 			lheight=0.24,
-			lp="1852.5,467.75",
-			lwidth=1.12,
+			lp="312,265.25",
+			lwidth=0.31,
 			pack=False,
 			rankdir=TB,
 			ranksep=0.02
 		];
 		node [fontname="DejaVu Sans Mono"];
 		edge [fontname="DejaVu Sans Mono"];
-		subgraph cluster1__init__ {
-			graph [bb="1047.5,369.88,1167.5,447.12",
-				compound=True,
-				fontname="DejaVu Sans Mono",
-				label=__init__,
-				lheight=0.24,
-				lp="1107.5,434.5",
-				lwidth=0.67,
-				pack=False,
-				rankdir=TB,
-				ranksep=0.02
-			];
-			node [fontname="DejaVu Sans Mono"];
-			edge [fontname="DejaVu Sans Mono"];
-			19	[fillcolor="#FFFB81",
-				height=0.5,
-				label="self.items = []\l",
-				pos="1107.5,395.88",
-				shape=rectangle,
-				style="filled,solid",
-				width=1.4306];
-		}
-		subgraph cluster0add_product {
-			graph [bb="1175.5,41.25,1965.5,447.12",
-				compound=True,
-				fontname="DejaVu Sans Mono",
-				label=add_product,
-				lheight=0.24,
-				lp="1570.5,434.5",
-				lwidth=1.06,
-				pack=False,
-				rankdir=TB,
-				ranksep=0.02
-			];
-			node [fontname="DejaVu Sans Mono"];
-			edge [fontname="DejaVu Sans Mono"];
-			subgraph cluster_24 {
-				graph [bb="1473.5,203.5,1543.5,255.5",
-					color=purple,
-					compound=true,
-					fontname="DejaVu Sans Mono",
-					label="",
-					rankdir=TB,
-					ranksep=0.02,
-					shape=tab,
-					style=filled
-				];
-				node [fontname="DejaVu Sans Mono"];
-				edge [fontname="DejaVu Sans Mono"];
-				26	[color="#E552FF",
-					height=0.5,
-					label=range,
-					pos="1508.5,229.5",
-					shape=tab,
-					style=filled,
-					width=0.75];
-			}
-			subgraph cluster_27 {
-				graph [bb="1798.5,118.25,1936.5,170.25",
-					color=purple,
-					compound=true,
-					fontname="DejaVu Sans Mono",
-					label="",
-					rankdir=TB,
-					ranksep=0.02,
-					shape=tab,
-					style=filled
-				];
-				node [fontname="DejaVu Sans Mono"];
-				edge [fontname="DejaVu Sans Mono"];
-				29	[color="#E552FF",
-					height=0.5,
-					label="self.items.append",
-					pos="1867.5,144.25",
-					shape=tab,
-					style=filled,
-					width=1.7014];
-			}
-			subgraph cluster_28 {
-				graph [bb="1584.5,49.25,1728.5,170.25",
-					color=purple,
-					compound=true,
-					fontname="DejaVu Sans Mono",
-					label="",
-					rankdir=TB,
-					ranksep=0.02,
-					shape=tab,
-					style=filled
-				];
-				node [fontname="DejaVu Sans Mono"];
-				edge [fontname="DejaVu Sans Mono"];
-				30	[color="#E552FF",
-					height=0.5,
-					label=print,
-					pos="1656.5,144.25",
-					shape=tab,
-					style=filled,
-					width=0.75];
-				31	[color="#E552FF",
-					height=0.5,
-					label="product.get_name",
-					pos="1656.5,75.25",
-					shape=tab,
-					style=filled,
-					width=1.7847];
-				30 -> 31	[color=black,
-					pos="e,1656.5,93.679 1656.5,126 1656.5,119.64 1656.5,112.25 1656.5,105.14"];
-			}
-			22	[fillcolor="#FF6752",
-				height=0.5,
-				label="if not isinstance(product, Product):\l",
-				pos="1557.5,395.88",
-				shape=diamond,
-				style="filled,solid",
-				width=6.3105];
-			23	[fillcolor="#98fb98",
-				height=0.5,
-				label="raise ValueError('Item yang ditambahka...')\l",
-				pos="1428.5,306.75",
-				shape=house,
-				style="filled,solid",
-				width=6.7981];
-			22 -> 23	[color=green,
-				label="not isinstance(product, Product)",
-				lp="1587.6,341.38",
-				pos="e,1451.7,323.9 1533.9,379.41 1520.9,370.81 1504.4,359.88 1489.8,350 1480.4,343.66 1470.2,336.72 1461,330.32"];
-			24	[fillcolor="#FFBE52",
-				height=0.5,
-				label="for _ in range(quantity):\l",
-				pos="1824.5,306.75",
-				shape=hexagon,
-				style="filled,solid",
-				width=3.7012];
-			22 -> 24	[color=red,
-				label="(not not isinstance(product, Product))",
-				lp="1854.4,341.38",
-				pos="e,1763.9,325.18 1597.4,380.67 1634.1,367.74 1690.1,348.33 1739.2,332.75 1743.7,331.33 1748.3,329.9 1753,328.48"];
-			24 -> 26	[label=calls,
-				lp="1647.5,272.12",
-				pos="e,1527.2,248 1733.9,294.77 1663.9,285.37 1573.5,270.94 1539.5,255.5 1538.6,255.07 1537.6,254.61 1536.7,254.12",
-				style=dashed];
-			27	[fillcolor="#FFFB81",
-				height=0.5,
-				label="self.items.append(product)\l",
-				pos="1867.5,229.5",
-				shape=rectangle,
-				style="filled,solid",
-				width=2.4931];
-			24 -> 27	[color=green,
-				label="range(quantity)",
-				lp="1840.2,272.12",
-				pos="e,1809,247.99 1798.2,288.4 1796.1,286.07 1794.3,283.52 1793,280.75 1789.7,273.85 1788.8,269.93 1793,263.5 1795,260.36 1797.5,257.51 \
-1800.2,254.94"];
-			28	[fillcolor="#FFFB81",
-				height=0.5,
-				label="print(f'Added {quantity} x {...')\l",
-				pos="1656.5,229.5",
-				shape=rectangle,
-				style="filled,solid",
-				width=2.8576];
-			24 -> 28	[color=green,
-				pos="e,1695.5,247.99 1785.5,288.3 1761.8,277.65 1731.2,263.94 1705.7,252.55"];
-			27 -> 24	[color=black,
-				pos="e,1884.6,288.38 1884.4,247.53 1890.9,255.74 1896.2,265.72 1890.5,278.81"];
-			27 -> 29	[label=calls,
-				lp="1880.6,186.88",
-				pos="e,1867.5,162.48 1867.5,211.25 1867.5,200.42 1867.5,186.2 1867.5,173.73",
-				style=dashed];
-			28 -> 30	[label=calls,
-				lp="1669.6,186.88",
-				pos="e,1656.5,162.48 1656.5,211.25 1656.5,200.42 1656.5,186.2 1656.5,173.73",
-				style=dashed];
-		}
-		subgraph cluster0calculate_total {
-			graph [bb="1973.5,110.25,2353.5,447.12",
-				compound=True,
-				fontname="DejaVu Sans Mono",
-				label=calculate_total,
-				lheight=0.24,
-				lp="2163.5,434.5",
-				lwidth=1.23,
-				pack=False,
-				rankdir=TB,
-				ranksep=0.02
-			];
-			node [fontname="DejaVu Sans Mono"];
-			edge [fontname="DejaVu Sans Mono"];
-			subgraph cluster_36 {
-				graph [bb="2007.5,118.25,2127.5,170.25",
-					color=purple,
-					compound=true,
-					fontname="DejaVu Sans Mono",
-					label="",
-					rankdir=TB,
-					ranksep=0.02,
-					shape=tab,
-					style=filled
-				];
-				node [fontname="DejaVu Sans Mono"];
-				edge [fontname="DejaVu Sans Mono"];
-				38	[color="#E552FF",
-					height=0.5,
-					label="item.get_price",
-					pos="2067.5,144.25",
-					shape=tab,
-					style=filled,
-					width=1.4514];
-			}
-			34	[fillcolor="#FFFB81",
-				height=0.5,
-				label="total = 0\l",
-				pos="2130.5,395.88",
-				shape=rectangle,
-				style="filled,solid",
-				width=0.97222];
-			35	[fillcolor="#FFBE52",
-				height=0.5,
-				label="for item in self.items:\l",
-				pos="2130.5,306.75",
-				shape=hexagon,
-				style="filled,solid",
-				width=3.2962];
-			34 -> 35	[color=black,
-				pos="e,2130.5,325.23 2130.5,377.66 2130.5,365.92 2130.5,350.1 2130.5,336.48"];
-			36	[fillcolor="#FFFB81",
-				height=0.5,
-				label="total += item.get_price()\l",
-				pos="2067.5,229.5",
-				shape=rectangle,
-				style="filled,solid",
-				width=2.3889];
-			35 -> 36	[color=green,
-				label="self.items",
-				lp="2093,272.12",
-				pos="e,2061.5,247.77 2071.3,288.3 2068.8,286.08 2066.4,283.57 2064.5,280.75 2060.1,274.45 2059.1,266.57 2059.7,258.93"];
-			37	[fillcolor="#98fb98",
-				height=0.5,
-				label="return total\l",
-				pos="2258.5,229.5",
-				shape=parallelogram,
-				style="filled,solid",
-				width=2.4284];
-			35 -> 37	[color=green,
-				pos="e,2229,247.86 2160.2,288.3 2177.7,277.99 2200.1,264.82 2219.1,253.66"];
-			36 -> 35	[color=black,
-				pos="e,2131.9,288.49 2109.5,247.92 2115.7,252.17 2121.4,257.32 2125.5,263.5 2128.2,267.59 2129.9,272.39 2130.8,277.27"];
-			36 -> 38	[label=calls,
-				lp="2080.6,186.88",
-				pos="e,2067.5,162.48 2067.5,211.25 2067.5,200.42 2067.5,186.2 2067.5,173.73",
-				style=dashed];
-		}
-		17	[fillcolor="#FFFB81",
-			height=0.82986,
-			label="def __init__(self):...\ldef add_product(self, product, quantity=1):...\ldef calculate_total(self):...\l",
-			pos="2509.5,395.88",
-			shape=rectangle,
+		4	[fillcolor="#98fb98",
+			height=0.5,
+			label="return a + b\l",
+			pos="312,226.62",
+			shape=parallelogram,
 			style="filled,solid",
-			width=4.1181];
+			width=2.6427];
+	}
+	subgraph cluster0subtract {
+		graph [bb="423,200.62,619,277.88",
+			compound=True,
+			fontname="DejaVu Sans Mono",
+			label=subtract,
+			lheight=0.24,
+			lp="521,265.25",
+			lwidth=0.69,
+			pack=False,
+			rankdir=TB,
+			ranksep=0.02
+		];
+		node [fontname="DejaVu Sans Mono"];
+		edge [fontname="DejaVu Sans Mono"];
+		8	[fillcolor="#98fb98",
+			height=0.5,
+			label="return a - b\l",
+			pos="521,226.62",
+			shape=parallelogram,
+			style="filled,solid",
+			width=2.4927];
 	}
 	subgraph cluster_KEY {
-		graph [bb="2673.5,203.5,3007.5,447.12",
+		graph [bb="627,33.25,961,277.88",
 			fontname="DejaVu Sans Mono",
 			label=KEY,
 			lheight=0.24,
-			lp="2840.5,434.5",
+			lp="794,265.25",
 			lwidth=0.33
 		];
 		node [fontname="DejaVu Sans Mono"];
 		edge [fontname="DejaVu Sans Mono"];
 		input	[fillcolor="#afeeee",
 			height=0.5,
-			pos="2728.5,306.75",
+			pos="682,120.25",
 			shape=parallelogram,
 			style=filled,
 			width=1.3142];
 		call	[fillcolor="#E552FF",
 			height=0.5,
-			pos="2728.5,229.5",
+			pos="682,59.25",
 			shape=tab,
 			style=filled,
 			width=0.75];
-		input -> call	[pos="e,2728.5,247.86 2728.5,288.3 2728.5,279.65 2728.5,269 2728.5,259.19",
+		input -> call	[pos="e,682,77.712 682,101.87 682,97.822 682,93.409 682,89.018",
 			style=invis];
 		default	[fillcolor="#FFFB81",
 			height=0.5,
-			pos="2848.5,229.5",
+			pos="802,59.25",
 			shape=rectangle,
 			style=filled,
 			width=0.80556];
 		if	[fillcolor="#FF6752",
 			height=0.5,
-			pos="2723.5,395.88",
+			pos="677,226.62",
 			shape=diamond,
 			style=filled,
 			width=0.75];
-		if -> input	[pos="e,2727.5,325.09 2724.5,378.08 2725.1,366.3 2726.1,350.25 2726.9,336.47",
+		if -> input	[pos="e,681.17,138.67 677.8,208.86 678.56,192.99 679.72,168.86 680.63,149.94",
 			style=invis];
 		for	[fillcolor="#FFBE52",
 			height=0.5,
-			pos="2795.5,395.88",
+			pos="749,226.62",
 			shape=hexagon,
 			style=filled,
 			width=0.75];
 		return	[fillcolor="#98fb98",
 			height=0.5,
-			pos="2848.5,306.75",
+			pos="802,120.25",
 			shape=parallelogram,
 			style=filled,
 			width=1.5285];
-		for -> return	[pos="e,2837.9,325.23 2806,377.66 2813.4,365.45 2823.5,348.81 2832,334.83",
+		for -> return	[pos="e,793.24,138.51 757.75,208.39 766,192.15 778.49,167.55 788.1,148.62",
 			style=invis];
 		while	[fillcolor="#FFBE52",
 			height=0.5,
-			pos="2878.5,395.88",
+			pos="832,226.62",
 			shape=hexagon,
 			style=filled,
 			width=1.0687];
-		return -> default	[pos="e,2848.5,247.86 2848.5,288.3 2848.5,279.65 2848.5,269 2848.5,259.19",
+		return -> default	[pos="e,802,77.712 802,101.87 802,97.822 802,93.409 802,89.018",
 			style=invis];
 		try	[fillcolor=orange,
 			height=0.5,
-			pos="2967.5,395.88",
+			pos="921,226.62",
 			shape=Mdiamond,
 			style=filled,
 			width=0.89559];
 		raise	[fillcolor="#98fb98",
 			height=0.5,
-			pos="2960.5,306.75",
+			pos="914,120.25",
 			shape=house,
 			style=filled,
 			width=1.0899];
-		try -> raise	[pos="e,2961.9,324.79 2966.2,378.08 2965.2,366.22 2963.9,350.05 2962.8,336.2",
+		try -> raise	[pos="e,915.15,138.32 919.88,208.86 918.81,192.9 917.17,168.57 915.9,149.6",
 			style=invis];
 	}
 	1	[fillcolor="#FFFB81",
-		height=0.5,
-		label="class Product:...\l",
-		pos="57.5,395.88",
+		height=1.309,
+		label="print('hello world')\ldef add(a, b):...\ldef subtract(a, b):...\lresult = add(5, 3)\lresult2 = subtract(10, 4)\l",
+		pos="115,226.62",
 		shape=rectangle,
 		style="filled,solid",
-		width=1.5972];
+		width=2.3368];
+	1 -> 2	[label=calls,
+		lp="89.966,162.88",
+		pos="e,54.91,138.52 83,179.24 75.586,168.49 67.942,157.41 61.348,147.85",
+		style=dashed];
+	1 -> 11	[label=calls,
+		lp="128.12,162.88",
+		pos="e,115,138.52 115,179.24 115,169.28 115,159.04 115,149.99",
+		style=dashed];
+	1 -> 12	[label=calls,
+		lp="180.9,162.88",
+		pos="e,180.1,138.52 149.67,179.24 157.78,168.37 166.15,157.17 173.35,147.55",
+		style=dashed];
 }
