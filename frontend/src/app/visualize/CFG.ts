@@ -160,10 +160,6 @@ function processClasses(
 
   return yForRow;
 }
-// =========================================================================
-// === TIDAK ADA PERUBAHAN PADA FUNGSI-FUNGSI DI BAWAH INI ===
-// =========================================================================
-
 function processMethods(className: string, methods: BackendMethodObject[]): MethodNodeInfo[] {
   return methods.map((methodObj: BackendMethodObject) => {
     const methodName = Object.keys(methodObj)[0];

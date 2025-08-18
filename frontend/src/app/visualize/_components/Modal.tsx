@@ -5,117 +5,228 @@ interface LegendModalProps {
   onClose: () => void;
 }
 
-// Data untuk item legenda
+/* ========= Data ========= */
 const containerItems = [
-  { color: 'bg-green-200 border-green-400', text: 'Class Container' },
-  { color: 'bg-blue-200 border-blue-400', text: 'Method Container' },
-  { color: 'bg-yellow-200 border-yellow-400', text: 'Function Container' },
-  { color: 'bg-gray-800 border-gray-500', text: 'Main Code Container' },
+  { color: "bg-green-200 border-green-400", text: "Class Container" },
+  { color: "bg-blue-200 border-blue-400", text: "Method Container" },
+  { color: "bg-yellow-200 border-yellow-400", text: "Function Container" },
+  { color: "bg-slate-800 border-slate-500", text: "Main Code Container" },
 ];
 
-const nodeItems = [
-  { shape: 'if', text: 'If Statement' },
-  { shape: 'for', text: 'For Loop' },
-  { shape: 'while', text: 'While Loop' },
-  { shape: 'try', text: 'Try-Except Block' },
-  { shape: 'input', text: 'Input/Assignment' },
-  { shape: 'return', text: 'Return Statement' },
-  { shape: 'raise', text: 'Raise Exception' },
-  { shape: 'call', text: 'Function/Method Call' },
-  { shape: 'default', text: 'Default Statement' },
+const nodeItems: { shape: NodeKind; text: string }[] = [
+  { shape: "if", text: "If Statement" },
+  { shape: "for", text: "For Loop" },
+  { shape: "while", text: "While Loop" },
+  { shape: "try", text: "Try-Except Block" },
+  { shape: "input", text: "Input/Assignment" },
+  { shape: "return", text: "Return Statement" },
+  { shape: "raise", text: "Raise Exception" },
+  { shape: "default", text: "Default Statement" },
 ];
 
 const edgeItems = [
-  { color: 'border-green-500', style: 'solid', text: 'Program Dependency Graph (PDG)' },
-  { color: 'border-blue-500', style: 'solid', text: 'Call Graph (CG)' },
-  { color: 'border-black', style: 'solid', text: 'Control Flow (CFG)' },
-  { color: 'border-red-500', style: 'solid', text: 'False Branch (CFG)' },
+  { stroke: "#22c55e", dash: false, text: "Program Dependency Graph (PDG)" }, // green-500
+  { stroke: "#3b82f6", dash: false, text: "Call Graph (CG)" },               // blue-500
+  { stroke: "#0f172a", dash: false, text: "Control Flow (CFG)" },            // slate-900
+  { stroke: "#ef4444", dash: true,  text: "False Branch (CFG)" },            // red-500
 ];
 
+/* ========= Node Shapes (SVG) ========= */
+type NodeKind =
+  | "if" | "for" | "while" | "try"
+  | "input" | "return" | "raise"
+  | "call" | "default";
 
-// Komponen untuk merepresentasikan bentuk node
-const NodeShape = ({ shape }: { shape: string }) => {
-    // Style dasar untuk semua bentuk
-    const baseStyle = "w-10 h-6 border-2 border-black flex items-center justify-center text-xs font-semibold";
-    
-    // SVG inline untuk bentuk kustom
-    const shapes: { [key: string]: JSX.Element } = {
-        'if': <div className={`${baseStyle} bg-red-200 -skew-x-20 -skew-y-20 rotate-45 transform scale-75`}><span className="-rotate-45 skew-x-20 skew-y-20">if</span></div>,
-        'for': <div className={`${baseStyle} bg-orange-200`} style={{clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)"}}>for</div>,
-        'while': <div className={`${baseStyle} bg-orange-200`} style={{clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)"}}>while</div>,
-        'try': <div className={`${baseStyle} bg-orange-300 transform scale-90`} style={{clipPath: "polygon(0% 50%, 15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%)"}}>try</div>,
-        'input': <div className={`${baseStyle} bg-cyan-200 -skew-x-20`}></div>,
-        'return': <div className={`${baseStyle} bg-green-300 -skew-x-20`}></div>,
-        'raise': <div className={`${baseStyle} bg-green-200`} style={{clipPath: "polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%)"}}></div>,
-        'call': <div className={`${baseStyle} bg-purple-300`}><div className="w-3 h-2 bg-purple-300 border-2 border-black absolute -top-1 -left-1"></div></div>,
-        'default': <div className={`${baseStyle} bg-yellow-200`}></div>,
-    };
-    
-    return shapes[shape] || null;
+const labelStyle =
+  "font-semibold text-[10px] leading-none fill-slate-800 pointer-events-none";
+
+function NodeShape({ kind }: { kind: NodeKind }) {
+  // semua ikon 56x28 agar konsisten
+  const W = 56, H = 28, stroke = "#0f172a";
+
+  const common = { stroke, strokeWidth: 2 } as const;
+
+  switch (kind) {
+    case "if": // diamond
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="28,2 54,14 28,26 2,14"
+            fill="#fecaca" /* red-200 */
+            {...common}
+          />
+          <text x="28" y="16" textAnchor="middle" className={labelStyle}>if</text>
+        </svg>
+      );
+
+    case "for": // hexagon
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="10,2 46,2 54,14 46,26 10,26 2,14"
+            fill="#fed7aa" /* orange-200 */
+            {...common}
+          />
+          <text x="28" y="16" textAnchor="middle" className={labelStyle}>for</text>
+        </svg>
+      );
+
+    case "while": // hexagon
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="10,2 46,2 54,14 46,26 10,26 2,14"
+            fill="#fed7aa"
+            {...common}
+          />
+          <text x="28" y="16" textAnchor="middle" className={labelStyle}>while</text>
+        </svg>
+      );
+
+    case "try": // hexagon (warna berbeda)
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="10,2 46,2 54,14 46,26 10,26 2,14"
+            fill="#fbbf24" /* amber-400-ish */
+            {...common}
+          />
+          <text x="28" y="16" textAnchor="middle" className={labelStyle}>try</text>
+        </svg>
+      );
+
+    case "input": // parallelogram
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="8,2 56,2 48,26 0,26"
+            fill="#bae6fd" /* sky-200 */
+            {...common}
+          />
+        </svg>
+      );
+
+    case "return": // parallelogram (hijau)
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="8,2 56,2 48,26 0,26"
+            fill="#86efac" /* green-300 */
+            {...common}
+          />
+        </svg>
+      );
+
+    case "raise": // pentagon
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <polygon
+            points="2,2 54,2 54,18 28,26 2,18"
+            fill="#bbf7d0" /* green-200 */
+            {...common}
+          />
+        </svg>
+      );
+
+    case "call": // rectangle with tab
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <rect x="2" y="6" width="52" height="20" rx="2" ry="2"
+                fill="#e9d5ff" /* purple-200 */ {...common} />
+          <rect x="6" y="2" width="12" height="8" rx="1" ry="1"
+                fill="#e9d5ff" {...common} />
+        </svg>
+      );
+
+    case "default": // plain rectangle
+      return (
+        <svg width={W} height={H} viewBox="0 0 56 28">
+          <rect x="2" y="2" width="52" height="24" rx="3" ry="3"
+                fill="#fef08a" /* yellow-200 */ {...common} />
+        </svg>
+      );
+  }
 }
 
+/* ========= Edge legend (SVG) ========= */
+function EdgeSample({ stroke, dash = false }: { stroke: string; dash?: boolean }) {
+  return (
+    <svg width="64" height="14" viewBox="0 0 64 14">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3"
+          orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill={stroke} />
+        </marker>
+      </defs>
+      <line
+        x1="2" y1="7" x2="58" y2="7"
+        stroke={stroke}
+        strokeWidth="2.5"
+        strokeDasharray={dash ? "6 4" : "0"}
+      />
+    </svg>
+  );
+}
 
+/* ========= Modal ========= */
 export const LegendModal: React.FC<LegendModalProps> = ({ onClose }) => {
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-center p-4"
       onClick={onClose}
     >
-      <div 
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative"
+      <div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="absolute top-3 right-3 text-slate-500 hover:text-slate-800 p-1 rounded-full hover:bg-slate-100"
           aria-label="Tutup"
         >
-          <X size={24} />
+          <X size={22} />
         </button>
 
-        <h3 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-2">Legenda</h3>
-        
-        {/* Bagian Kontainer */}
-        <div className="mb-6">
-            <h4 className="font-bold text-slate-700 mb-3">Container</h4>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                {containerItems.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                        <div className={`w-5 h-5 rounded-sm border-2 ${item.color}`}></div>
-                        <span className="text-sm text-slate-600">{item.text}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-        
-        {/* Bagian Node */}
-        <div className="mb-6">
-            <h4 className="font-bold text-slate-700 mb-3">Node</h4>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                {nodeItems.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                        <div className="w-12 flex justify-center"><NodeShape shape={item.shape} /></div>
-                        <span className="text-sm text-slate-600">{item.text}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
+        <h3 className="text-2xl font-bold text-slate-900 mb-6 border-b pb-3">Legenda</h3>
 
-        {/* Bagian Edge */}
-        <div>
-            <h4 className="font-bold text-slate-700 mb-3">Edge (Garis Penghubung)</h4>
-            <div className="space-y-3">
-                {edgeItems.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                        <div className="w-8 flex items-center">
-                            <div className={`w-full border-t-2 ${item.color} ${item.style === 'dashed' ? 'border-dashed' : 'border-solid'}`}></div>
-                        </div>
-                        <span className="text-sm text-slate-600">{item.text}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
+        {/* Container */}
+        <section className="mb-6">
+          <h4 className="font-semibold text-slate-800 mb-3">Container</h4>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            {containerItems.map((it, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className={`w-5 h-5 rounded-sm border-2 ${it.color}`} />
+                <span className="text-sm text-slate-700">{it.text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
+        {/* Node */}
+        <section className="mb-6">
+          <h4 className="font-semibold text-slate-800 mb-3">Node</h4>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            {nodeItems.map((n, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <NodeShape kind={n.shape} />
+                <span className="text-sm text-slate-700">{n.text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Edge */}
+        <section>
+          <h4 className="font-semibold text-slate-800 mb-3">Edge (Garis Penghubung)</h4>
+          <div className="space-y-3">
+            {edgeItems.map((e, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <EdgeSample stroke={e.stroke} dash={e.dash} />
+                <span className="text-sm text-slate-700">{e.text}</span>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
